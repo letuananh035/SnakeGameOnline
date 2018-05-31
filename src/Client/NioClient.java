@@ -1,6 +1,7 @@
 package Client;
 
 import Support.BlockData;
+import Support.ChangeRequest;
 import Support.TypeBlock;
 
 import java.io.IOException;
@@ -15,228 +16,248 @@ import java.nio.channels.spi.SelectorProvider;
 import java.util.*;
 
 public class NioClient implements Runnable {
-	// The host:port combination to connect to
-	private InetAddress hostAddress;
-	private int port;
+    // The host:port combination to connect to
+    private InetAddress hostAddress;
+    private int port;
 
-	// The selector we'll be monitoring
-	private Selector selector;
+    // The selector we'll be monitoring
+    private Selector selector;
 
-	// The buffer into which we'll read data when it's available
-	private ByteBuffer readBuffer = ByteBuffer.allocate(8192);
+    // The buffer into which we'll read data when it's available
+    private ByteBuffer readBuffer = ByteBuffer.allocate(8192);
 
-	// A list of PendingChange instances
-	private List pendingChanges = new LinkedList();
+    // A list of PendingChange instances
+    private List pendingChanges = new LinkedList();
 
-	// Maps a SocketChannel to a list of ByteBuffer instances
-	private Map pendingData = new HashMap();
-	
-	// Maps a SocketChannel to a RspHandler
-	private Map rspHandlers = Collections.synchronizedMap(new HashMap());
-	
-	public NioClient(InetAddress hostAddress, int port) throws IOException {
-		this.hostAddress = hostAddress;
-		this.port = port;
-		this.selector = this.initSelector();
-	}
+    // Maps a SocketChannel to a list of ByteBuffer instances
+    private List pendingData = new LinkedList();
 
-	public void send(byte[] data, RspHandler handler) throws IOException {
-		// Start a new connection
-		SocketChannel socket = this.initiateConnection();
-		
-		// Register the response handler
-		this.rspHandlers.put(socket, handler);
-		
-		// And queue the data we want written
-		synchronized (this.pendingData) {
-			List queue = (List) this.pendingData.get(socket);
-			if (queue == null) {
-				queue = new ArrayList();
-				this.pendingData.put(socket, queue);
-			}
-			queue.add(ByteBuffer.wrap(data));
-		}
+    // Maps a SocketChannel to a RspHandler
+    //private Map rspHandlers = Collections.synchronizedMap(new HashMap());
+    // SocketChannel Sever
+    SocketChannel socket = null;
 
-		// Finally, wake up our selecting thread so it can make the required changes
-		this.selector.wakeup();
-	}
+    private RspHandler worker;
 
-	public void run() {
-		while (true) {
-			try {
-				// Process any pending changes
-				synchronized (this.pendingChanges) {
-					Iterator changes = this.pendingChanges.iterator();
-					while (changes.hasNext()) {
-						ChangeRequest change = (ChangeRequest) changes.next();
-						switch (change.type) {
-						case ChangeRequest.CHANGEOPS:
-							SelectionKey key = change.socket.keyFor(this.selector);
-							key.interestOps(change.ops);
-							break;
-						case ChangeRequest.REGISTER:
-							change.socket.register(this.selector, change.ops);
-							break;
-						}
-					}
-					this.pendingChanges.clear();
-				}
+    public NioClient(InetAddress hostAddress, int port, RspHandler worker) throws IOException {
+        this.hostAddress = hostAddress;
+        this.port = port;
+        this.worker = worker;
+        socket = this.initiateConnection();
+        this.selector = this.initSelector();
+    }
 
-				// Wait for an event one of the registered channels
-				this.selector.select();
+    public void send(byte[] data) throws IOException {
+        synchronized (this.pendingChanges) {
+            // Indicate we want the interest ops set changed
+            this.pendingChanges.add(new ChangeRequest(socket, ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
 
-				// Iterate over the set of keys for which events are available
-				Iterator selectedKeys = this.selector.selectedKeys().iterator();
-				while (selectedKeys.hasNext()) {
-					SelectionKey key = (SelectionKey) selectedKeys.next();
-					selectedKeys.remove();
+            // And queue the data we want written
+            synchronized (this.pendingData) {
+                this.pendingData.add(ByteBuffer.wrap(data));
+            }
+        }
+        // Finally, wake up our selecting thread so it can make the required changes
+        this.selector.wakeup();
+    }
 
-					if (!key.isValid()) {
-						continue;
-					}
+    public void run() {
+        while (true) {
+            try {
+                // Process any pending changes
+//                synchronized (this.pendingChanges) {
+//                    while (!this.pendingChanges.isEmpty()) {
+//                        ChangeRequest change = (ChangeRequest) this.pendingChanges.get(0);
+//                        switch (change.type) {
+//                            case ChangeRequest.CHANGEOPS:
+//                                SelectionKey key = change.socket.keyFor(this.selector);
+//                                key.interestOps(change.ops);
+//                                break;
+//                            case ChangeRequest.REGISTER:
+//                                change.socket.register(this.selector, change.ops);
+//                                break;
+//                        }
+//                        this.pendingChanges.remove(0);
+//                        break;
+//                    }
+//                }
+                synchronized (this.pendingChanges) {
+                    Iterator changes = this.pendingChanges.iterator();
+                    while (changes.hasNext()) {
+                        ChangeRequest change = (ChangeRequest) changes.next();
+                        switch (change.type) {
+                            case ChangeRequest.CHANGEOPS:
+                                SelectionKey key = change.socket.keyFor(this.selector);
+                                key.interestOps(change.ops);
+                                break;
+                            case ChangeRequest.REGISTER:
+                                change.socket.register(this.selector, change.ops);
+                                break;
+                        }
+                    }
+                    this.pendingChanges.clear();
+                }
 
-					// Check what event is available and deal with it
-					if (key.isConnectable()) {
-						this.finishConnection(key);
-					} else if (key.isReadable()) {
-						this.read(key);
-					} else if (key.isWritable()) {
-						this.write(key);
-					}
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
+                // Wait for an event one of the registered channels
+                this.selector.select();
 
-	private void read(SelectionKey key) throws IOException {
-		SocketChannel socketChannel = (SocketChannel) key.channel();
+                // Iterate over the set of keys for which events are available
+                Iterator selectedKeys = this.selector.selectedKeys().iterator();
+                while (selectedKeys.hasNext()) {
+                    SelectionKey key = (SelectionKey) selectedKeys.next();
+                    selectedKeys.remove();
 
-		// Clear out our read buffer so it's ready for new data
-		this.readBuffer.clear();
+                    if (!key.isValid()) {
+                        continue;
+                    }
 
-		// Attempt to read off the channel
-		int numRead;
-		try {
-			numRead = socketChannel.read(this.readBuffer);
-		} catch (IOException e) {
-			// The remote forcibly closed the connection, cancel
-			// the selection key and close the channel.
-			key.cancel();
-			socketChannel.close();
-			return;
-		}
+                    // Check what event is available and deal with it
+                    if (key.isConnectable()) {
+                        this.finishConnection(key);
+                    } else if (key.isReadable()) {
+                        this.read(key);
+                    } else if (key.isWritable()) {
+                        this.write(key);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-		if (numRead == -1) {
-			// Remote entity shut the socket down cleanly. Do the
-			// same from our end and cancel the channel.
-			key.channel().close();
-			key.cancel();
-			return;
-		}
+    private void read(SelectionKey key) throws IOException {
+        SocketChannel socketChannel = (SocketChannel) key.channel();
 
-		// Handle the response
-		this.handleResponse(socketChannel, this.readBuffer.array(), numRead);
-	}
+        // Clear out our read buffer so it's ready for new data
+        this.readBuffer.clear();
 
-	private void handleResponse(SocketChannel socketChannel, byte[] data, int numRead) throws IOException {
-		// Make a correctly sized copy of the data before handing it
-		// to the client
-		byte[] rspData = new byte[numRead];
-		System.arraycopy(data, 0, rspData, 0, numRead);
-		
-		// Look up the handler for this channel
-		RspHandler handler = (RspHandler) this.rspHandlers.get(socketChannel);
-		
-		// And pass the response to it
-		if (handler.handleResponse(rspData)) {
-			// The handler has seen enough, close the connection
-			socketChannel.close();
-			socketChannel.keyFor(this.selector).cancel();
-		}
-	}
+        // Attempt to read off the channel
+        int numRead;
+        try {
+            numRead = socketChannel.read(this.readBuffer);
+        } catch (IOException e) {
+            // The remote forcibly closed the connection, cancel
+            // the selection key and close the channel.
+            key.cancel();
+            socketChannel.close();
+            return;
+        }
 
-	private void write(SelectionKey key) throws IOException {
-		SocketChannel socketChannel = (SocketChannel) key.channel();
+        if (numRead == -1) {
+            // Remote entity shut the socket down cleanly. Do the
+            // same from our end and cancel the channel.
+            key.channel().close();
+            key.cancel();
+            return;
+        }
 
-		synchronized (this.pendingData) {
-			List queue = (List) this.pendingData.get(socketChannel);
+        // Handle the response
+        this.handleResponse(socketChannel, this.readBuffer.array(), numRead);
+    }
 
-			// Write until there's not more data ...
-			while (!queue.isEmpty()) {
-				ByteBuffer buf = (ByteBuffer) queue.get(0);
-				socketChannel.write(buf);
-				if (buf.remaining() > 0) {
-					// ... or the socket's buffer fills up
-					break;
-				}
-				queue.remove(0);
-			}
+    private void handleResponse(SocketChannel socketChannel, byte[] data, int numRead) throws IOException {
+        // Make a correctly sized copy of the data before handing it
+        // to the client
+        byte[] rspData = new byte[numRead];
+        System.arraycopy(data, 0, rspData, 0, numRead);
 
-			if (queue.isEmpty()) {
-				// We wrote away all data, so we're no longer interested
-				// in writing on this socket. Switch back to waiting for
-				// data.
-				key.interestOps(SelectionKey.OP_READ);
-			}
-		}
-	}
+        // Look up the handler for this channel
+        //RspHandler handler = (RspHandler) this.rspHandlers.get(socketChannel);
 
-	private void finishConnection(SelectionKey key) throws IOException {
-		SocketChannel socketChannel = (SocketChannel) key.channel();
-	
-		// Finish the connection. If the connection operation failed
-		// this will raise an IOException.
-		try {
-			socketChannel.finishConnect();
-		} catch (IOException e) {
-			// Cancel the channel's registration with our selector
-			System.out.println(e);
-			key.cancel();
-			return;
-		}
-	
-		// Register an interest in writing on this channel
-		key.interestOps(SelectionKey.OP_WRITE);
-	}
+        // And pass the response to it
+        worker.handleResponse(rspData);
+//       if ) {
+//			// The handler has seen enough, close the connection
+//			socketChannel.close();
+//			socketChannel.keyFor(this.selector).cancel();
+//        }
+    }
 
-	private SocketChannel initiateConnection() throws IOException {
-		// Create a non-blocking socket channel
-		SocketChannel socketChannel = SocketChannel.open();
-		socketChannel.configureBlocking(false);
-	
-		// Kick off connection establishment
-		socketChannel.connect(new InetSocketAddress(this.hostAddress, this.port));
-	
-		// Queue a channel registration since the caller is not the 
-		// selecting thread. As part of the registration we'll register
-		// an interest in connection events. These are raised when a channel
-		// is ready to complete connection establishment.
-		synchronized(this.pendingChanges) {
-			this.pendingChanges.add(new ChangeRequest(socketChannel, ChangeRequest.REGISTER, SelectionKey.OP_CONNECT));
-		}
-		
-		return socketChannel;
-	}
+    private void write(SelectionKey key) throws IOException {
+        SocketChannel socketChannel = (SocketChannel) key.channel();
 
-	private Selector initSelector() throws IOException {
-		// Create a new selector
-		return SelectorProvider.provider().openSelector();
-	}
+        synchronized (this.pendingData) {
+            // Write until there's not more data ...
+            while (!this.pendingData.isEmpty()) {
+                ByteBuffer buf = (ByteBuffer) this.pendingData.get(0);
+                socket.write(buf);
+                if (buf.remaining() > 0) {
+                    // ... or the socket's buffer fills up
+                    break;
+                }
+                this.pendingData.remove(0);
+            }
 
-	public static void main(String[] args) {
-		try {
-			NioClient client = new NioClient(InetAddress.getByName("localhost"),9090);
-			Thread t = new Thread(client);
-			t.setDaemon(true);
-			t.start();
-			RspHandler handler = new RspHandler();
-			BlockData blockData = new BlockData(TypeBlock.MSG,"aAAA");
-			client.send(blockData.toBytes(), handler);
-			handler.waitForResponse();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+            if (this.pendingData.isEmpty()) {
+                // We wrote away all data, so we're no longer interested
+                // in writing on this socket. Switch back to waiting for
+                // data.
+                key.interestOps(SelectionKey.OP_READ);
+            }
+        }
+    }
+
+    private void finishConnection(SelectionKey key) throws IOException {
+        SocketChannel socketChannel = (SocketChannel) key.channel();
+        // Finish the connection. If the connection operation failed
+        // this will raise an IOException.
+        try {
+            socketChannel.finishConnect();
+        } catch (IOException e) {
+            // Cancel the channel's registration with our selector
+            System.out.println(e);
+            key.cancel();
+            return;
+        }
+
+        // Register an interest in writing on this channel
+        key.interestOps(SelectionKey.OP_WRITE);
+    }
+
+    private SocketChannel initiateConnection() throws IOException {
+        // Create a non-blocking socket channel
+        SocketChannel socketChannel = SocketChannel.open();
+        socketChannel.configureBlocking(false);
+
+        // Kick off connection establishment
+        socketChannel.connect(new InetSocketAddress(this.hostAddress, this.port));
+
+        // Queue a channel registration since the caller is not the
+        // selecting thread. As part of the registration we'll register
+        // an interest in connection events. These are raised when a channel
+        // is ready to complete connection establishment.
+        synchronized (this.pendingChanges) {
+            this.pendingChanges.add(new ChangeRequest(socketChannel, ChangeRequest.REGISTER, SelectionKey.OP_CONNECT));
+        }
+
+        return socketChannel;
+    }
+
+    private Selector initSelector() throws IOException {
+        // Create a new selector
+        return SelectorProvider.provider().openSelector();
+    }
+
+    public static void main(String[] args) {
+        try {
+            RspHandler handler = new RspHandler();
+            NioClient client = new NioClient(InetAddress.getByName("localhost"), 9090, handler);
+            Thread t = new Thread(client);
+            t.setDaemon(true);
+            t.start();
+            //client.SetUpSocket();
+            new Thread(handler).start();
+            int i = 0;
+            BlockData blockData = new BlockData(TypeBlock.MSG, Integer.toString(i));
+            client.send(blockData.toBytes());
+            Thread.sleep(10000);
+            client.send(blockData.toBytes());
+            while(true){
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

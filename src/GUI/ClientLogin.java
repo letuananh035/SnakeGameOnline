@@ -26,16 +26,19 @@ public class ClientLogin {
 
 
     NioClient client;
+    RspHandler handler;
 
     // JFrame frame;
     public ClientLogin() {
 
 
         try {
-            client = new NioClient(InetAddress.getByName("localhost"), 9090);
+            handler = new RspHandler();
+            client = new NioClient(InetAddress.getByName("localhost"), 9090, handler);
             Thread t = new Thread(client);
             t.setDaemon(true);
             t.start();
+            new Thread(handler).start();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -60,32 +63,28 @@ public class ClientLogin {
                 BlockData blockData = new BlockData(TypeBlock.START, "Create a new room");
 
                 try {
-                    client.send(blockData.toBytes(), handler);
+                    client.send(blockData.toBytes());
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
-                handler.waitForResponse();
-                //frame.setContentPane(new Game());
-                Game game = new Game(client);
-                //sframe.add(game);
-
-                //frame.add(game, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-
-                frameGame = new JFrame("ClientLogin");
-                frameGame.setContentPane(game);
-                frameGame.setBounds(300, 300, 800, 800);
-                frameGame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frameGame.pack();
-                frameGame.setVisible(true);
-                frame.hide();
-                frameGame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-                frameGame.addWindowListener(new WindowAdapter() {
-                    @Override
-                    public void windowClosing(WindowEvent windowEvent) {
-                        frame.show();
-                        frameGame.dispose(); // close window
-                    }
-                });
+//
+//                Game game = new Game(client);
+//
+//                frameGame = new JFrame("ClientLogin");
+//                frameGame.setContentPane(game);
+//                frameGame.setBounds(300, 300, 800, 800);
+//                frameGame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//                frameGame.pack();
+//                frameGame.setVisible(true);
+//                frame.hide();
+//                frameGame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+//                frameGame.addWindowListener(new WindowAdapter() {
+//                    @Override
+//                    public void windowClosing(WindowEvent windowEvent) {
+//                        frame.show();
+//                        frameGame.dispose(); // close window
+//                    }
+//                });
             }
         });
 

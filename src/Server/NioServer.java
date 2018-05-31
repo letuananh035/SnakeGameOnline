@@ -1,5 +1,10 @@
 package Server;
 
+import Support.BlockData;
+import Support.ChangeRequest;
+import Support.Model.Player;
+import Support.TypeBlock;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -33,6 +38,9 @@ public class NioServer implements Runnable {
 
 	// Maps a SocketChannel to a list of ByteBuffer instances
 	private Map pendingData = new HashMap();
+
+	//List player connection
+	private List<Player> players = new ArrayList<Player>();
 
 	public NioServer(InetAddress hostAddress, int port, EchoWorker worker) throws IOException {
 		this.hostAddress = hostAddress;
@@ -73,6 +81,7 @@ public class NioServer implements Runnable {
 						case ChangeRequest.CHANGEOPS:
 							SelectionKey key = change.socket.keyFor(this.selector);
 							key.interestOps(change.ops);
+							break;
 						}
 					}
 					this.pendingChanges.clear();
@@ -118,6 +127,17 @@ public class NioServer implements Runnable {
 		// Register the new SocketChannel with our Selector, indicating
 		// we'd like to be notified when there's data waiting to be read
 		socketChannel.register(this.selector, SelectionKey.OP_READ);
+
+		//Add player to list and return id to client
+
+		Player player = new Player();
+		player.setSocketChannel(socketChannel);
+
+		players.add(player);
+
+		BlockData blockData = new BlockData(TypeBlock.LOGIN,Long.toString(player.getId()));
+
+		this.worker.processData(this, player.getSocketChannel(), blockData.toBytes(), blockData.toBytes().length);
 	}
 
 	private void read(SelectionKey key) throws IOException {

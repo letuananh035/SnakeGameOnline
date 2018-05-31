@@ -46,15 +46,15 @@ public class Game extends JPanel implements Runnable, ActionListener {
     public Game(NioClient client) {
         this.client = client;
 
-        RspHandler handler = new RspHandler();
-        BlockData blockData = new BlockData(TypeBlock.START, "Create a new room");
-
-        try {
-            client.send(blockData.toBytes(), handler);
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        }
-        handler.waitForResponse();
+//        RspHandler handler = new RspHandler();
+//        BlockData blockData = new BlockData(TypeBlock.START, "Create a new room");
+//
+//        try {
+//            client.send(blockData.toBytes(), handler);
+//        } catch (IOException e1) {
+//            e1.printStackTrace();
+//        }
+//        handler.waitForResponse();
         requestFocus();
         requestFocusInWindow();
         setFocusTraversalKeysEnabled(false);
