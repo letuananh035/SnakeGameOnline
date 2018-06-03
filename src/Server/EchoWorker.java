@@ -33,11 +33,10 @@ public class EchoWorker implements Runnable {
 				dataEvent = (ServerDataEvent) queue.remove(0);
 			}
 
-
-			String msg = dataEvent.data.toString();
+			String msg = new String(dataEvent.data);
 			BlockData blockData = new BlockData();
 			blockData.parse(msg);
-			System.out.println(blockData.getMsg());
+			//System.out.println(blockData.getMsg());
 			//Sử lí dữ liệu gửi về client;
 
 			// Return to sender

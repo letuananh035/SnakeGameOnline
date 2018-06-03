@@ -31,9 +31,10 @@ public class ClientLogin {
     // JFrame frame;
     public ClientLogin() {
 
+        RspHandler handler = new RspHandler();
 
         try {
-            client = new NioClient(InetAddress.getByName("localhost"), 9090);
+            NioClient client = new NioClient(InetAddress.getByName("localhost"), 9090, handler);
             Thread t = new Thread(client);
             t.setDaemon(true);
             t.start();
@@ -57,16 +58,7 @@ public class ClientLogin {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                RspHandler handler = new RspHandler();
-                BlockData blockData = new BlockData(TypeBlock.START, "Create a new room");
 
-                try {
-                    client.send(blockData.toBytes(), handler);
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-                handler.waitForResponse();
-                //frame.setContentPane(new Game());
 
                 RoomPassword roomPassword = new RoomPassword(client);
 

@@ -3,8 +3,8 @@ package Support;
 public enum TypeBlock {
     //Type Define
     ERROR("ERROR", 0),
-    START("START", 1),
-    END("END", 2),
+    LOGIN("LOGIN", 1),
+    START("START", 2),
     TURN("TURN", 3),
     EMOTI("EMOTI", 4),
     NAME("NAME", 5),

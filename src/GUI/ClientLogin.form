@@ -75,32 +75,7 @@
           <component id="1c00d" class="javax.swing.JList" binding="clientUsingList">
             <constraints/>
             <properties>
-              <model>
-                <item value="dsadsa"/>
-                <item value="dsa"/>
-                <item value="dsa"/>
-                <item value="d"/>
-                <item value="asd"/>
-                <item value="as"/>
-                <item value="dsa"/>
-                <item value="das"/>
-                <item value="d"/>
-                <item value="sa"/>
-                <item value="das"/>
-                <item value="d"/>
-                <item value="asd"/>
-                <item value="sa"/>
-                <item value="dsa"/>
-                <item value="d"/>
-                <item value="sad"/>
-                <item value="asd"/>
-                <item value="as"/>
-                <item value="dsa"/>
-                <item value="d"/>
-                <item value="sa"/>
-                <item value="d"/>
-                <item value="sa"/>
-              </model>
+              <model/>
             </properties>
           </component>
         </children>
