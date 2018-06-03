@@ -13,6 +13,7 @@ import java.awt.Point;
 import java.awt.event.*;
 import java.io.IOException;
 import java.net.SocketException;
+import java.util.Random;
 
 import javax.swing.*;
 
@@ -22,15 +23,17 @@ public class Game extends JPanel implements Runnable, ActionListener {
     private static final long serialVersionUID = 1L;
 
     // screen game
-    private static int width = 300;
-    private static int height = 168;
-    private static int scale = 3;
+    private static int width = 60;
+    private static int height = 35;
+    public static int SCALE = 15;
     public static String title = "Snake";
     private boolean running = false;
 
     // snake
     private int lengthOfSnake = 5;
     private Point[] snakeBody = new Point[100];
+
+    private Snake[] snakeList = new Snake[4];
 
     // thread
     private int delay = 100;
@@ -65,12 +68,12 @@ public class Game extends JPanel implements Runnable, ActionListener {
         setFocusable(true);
         key.right = true;
 
-        for (int i = 0; i < 100; i++) {
-            snakeBody[i] = new Point();
-        }
-        snakeBody[0].move(200, 300);
 
-        Dimension size = new Dimension(width * scale, height * scale);
+        for(int i = 0 ; i < 4 ; i++)
+            snakeList[i] = new Snake();
+
+
+        Dimension size = new Dimension(width * SCALE, height * SCALE);
         setPreferredSize(size);
         start();
     }
@@ -85,15 +88,14 @@ public class Game extends JPanel implements Runnable, ActionListener {
         g.fillRect(0, 0, getWidth(), getHeight());
 
         g.setColor(Color.white);
-        g.drawRect(10, 10, width * scale - 30, 90);
+        g.drawRect(10, 10, width * SCALE - 30, 90);
 
         g.setColor(Color.white);
-        g.drawRect(10, 110, width * scale - 30, height * scale - 150);
+        g.drawRect(10, 110, width * SCALE - 30, height * SCALE - 120);
 
-        for (int i = 0; i < lengthOfSnake; ++i) {
-            g.setColor(Color.green);
-            g.drawRect(snakeBody[i].x, snakeBody[i].y, 15, 15);
-        }
+
+        for(int i = 0 ; i < 4 ; i++)
+            snakeList[i].drawSnake(g);
 
         g.dispose();
     }
@@ -113,16 +115,53 @@ public class Game extends JPanel implements Runnable, ActionListener {
             e.printStackTrace();
         }
 
-        for (int i = lengthOfSnake - 1; i >= 1; --i)
-            snakeBody[i].setLocation(snakeBody[i - 1]);
-        if (key.up)
-            snakeBody[0].y -= 20;
-        else if (key.down)
-            snakeBody[0].y += 20;
-        else if (key.left)
-            snakeBody[0].x -= 20;
-        else if (key.right)
-            snakeBody[0].x += 20;
+//        for (int i = lengthOfSnake - 1; i >= 1; --i)
+//            snakeBody[i].setLocation(snakeBody[i - 1]);
+//        if (key.up)
+//            snakeBody[0].y -= 20;
+//        else if (key.down)
+//            snakeBody[0].y += 20;
+//        else if (key.left)
+//            snakeBody[0].x -= 20;
+//        else if (key.right)
+//            snakeBody[0].x += 20;
+
+        for(int i = 0 ; i < 4 ; i++){
+
+
+            Random rand = new Random();
+            int  n = rand.nextInt(50) + 1;
+
+            n = n % 4;
+
+
+            if (n == 0) {
+                key.up = true;
+                key.down = false;
+                key.left = false;
+                key.right = false;
+            }
+            else if (n == 1) {
+                key.up = false;
+                key.down = true;
+                key.left = false;
+                key.right = false;
+            }
+            else if (n == 2) {
+                key.up = false;
+                key.down = false;
+                key.left = true;
+                key.right = false;
+            }
+            else if (n == 3) {
+                key.up = false;
+                key. down = false;
+                key. left = false;
+                key. right = true;
+            }
+
+            snakeList[i].updateSnake(key);
+        }
 
         repaint();
     }
