@@ -3,15 +3,11 @@ package GUI;
 import Client.NioClient;
 import Client.RspHandler;
 import Support.BlockData;
-import Support.Model.Room;
 import Support.TypeBlock;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
@@ -22,10 +18,12 @@ public class ClientLogin{
     private static JFrame framePassword;
     private JPanel mainPanel;
     private JButton btnExit;
-    private JButton btnJoin;
+    private JButton btnListUser;
     private JButton btnHost;
     private JPanel buttonPanel;
     private JList clientUsingList;
+    private JTabbedPane tabbedPane;
+    private JList RoomList;
 
 
     public static NioClient client;
@@ -64,6 +62,21 @@ public class ClientLogin{
 
         }
 
+        clientUsingList.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                JList list = (JList)evt.getSource();
+                if (evt.getClickCount() == 2) {
+
+                    // Double-click detected
+                    int index = list.locationToIndex(evt.getPoint());
+                    RoomPassword roomPassword = new RoomPassword();
+                    roomPassword.createAndShowGUI();
+
+                }
+            }
+        });
+
+
         btnHost.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -94,12 +107,7 @@ public class ClientLogin{
             }
         });
 
-        btnJoin.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
 
-            }
-        });
 
     }
 
@@ -108,18 +116,22 @@ public class ClientLogin{
     }
 
     public void UpdateList(List<String> rooms) {
-        clientUsingList.setModel(new DefaultListModel<String>());
+        RoomList.setModel(new DefaultListModel<String>());
         rooms.forEach(item -> {
+            ((DefaultListModel) RoomList.getModel()).addElement(item);
+        });
+
+
+    }
+    public void UpdateListPlayer(List<String> players) {
+
+
+        clientUsingList.setModel(new DefaultListModel<String>());
+        players.forEach(item -> {
             ((DefaultListModel) clientUsingList.getModel()).addElement(item);
         });
-        btnJoin.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
 
-            }
-        });
     }
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -169,9 +181,9 @@ public class ClientLogin{
         btnHost.setMargin(new Insets(2, 14, 2, 20));
         btnHost.setText("Host");
         buttonPanel.add(btnHost, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        btnJoin = new JButton();
-        btnJoin.setText("Join");
-        buttonPanel.add(btnJoin, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        btnListUser = new JButton();
+        btnListUser.setText("Join");
+        buttonPanel.add(btnListUser, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         clientUsingList = new JList();
         mainPanel.add(clientUsingList, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(150, 50), null, 0, false));
     }

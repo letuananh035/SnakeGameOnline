@@ -10,7 +10,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 public class Lobby {
-    private JList list1;
+    private JList playerWaitingList;
     private JButton btnStartGame;
     private JPanel lobbyPanel;
     private  JFrame jFrameGame;
@@ -18,9 +18,16 @@ public class Lobby {
 
     private  NioClient client;
     private ClientLogin clientLogin;
+    
     public Lobby() {
         this.client = ClientLogin.client;
         this.clientLogin = ClientLogin.mActivity;
+
+        playerWaitingList.setModel(new DefaultListModel<String>());
+       // rooms.forEach(item -> {
+        ((DefaultListModel) playerWaitingList.getModel()).addElement(client.getPlayer().getId());
+
+
         btnStartGame.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

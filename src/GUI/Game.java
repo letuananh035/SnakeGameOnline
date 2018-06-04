@@ -1,18 +1,13 @@
 package GUI;
 
 import Client.NioClient;
-import Client.RspHandler;
-import Support.BlockData;
-import Support.TypeBlock;
+import SnakeGame.Food;
+import SnakeGame.KeyBoard;
+import SnakeGame.Snake;
+import javafx.geometry.Point2D;
 
-import java.awt.Canvas;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Point;
+import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
-import java.net.SocketException;
 import java.util.Random;
 
 import javax.swing.*;
@@ -30,11 +25,11 @@ public class Game extends JPanel implements Runnable, ActionListener {
     private boolean running = false;
 
     // snake
-    private int lengthOfSnake = 5;
-    private Point[] snakeBody = new Point[100];
-
+    private Food food;
     private Snake[] snakeList = new Snake[4];
+    private Random random = new Random();
 
+    private int numberOfSnake = 3;
     // thread
     private int delay = 100;
     private Thread thread;
@@ -69,8 +64,13 @@ public class Game extends JPanel implements Runnable, ActionListener {
         key.right = true;
 
 
+        // create food
+
+        food = new Food(getRandomPosition());
+
+        // generate snake
         for(int i = 0 ; i < 4 ; i++)
-            snakeList[i] = new Snake();
+            snakeList[i] = new Snake(i);
 
 
         Dimension size = new Dimension(width * SCALE, height * SCALE);
@@ -87,15 +87,35 @@ public class Game extends JPanel implements Runnable, ActionListener {
         g.setColor(Color.darkGray);
         g.fillRect(0, 0, getWidth(), getHeight());
 
-        g.setColor(Color.white);
-        g.drawRect(10, 10, width * SCALE - 30, 90);
+        int blockSize = width / 4;
+
+        for (int i = 0 ; i < 4 ; ++i){
+            g.setColor(Color.white);
+            g.drawRect(blockSize * i * SCALE + SCALE, 10, (blockSize - 2 ) * SCALE , SCALE * 6);
+        }
+
+        for (int i = 0 ; i < numberOfSnake ; i++) {
+            switch (i){
+                case 0: g.setColor(Color.green); break;
+                case 1: g.setColor(Color.red); break;
+                case 2: g.setColor(Color.orange); break;
+                case 3: g.setColor(Color.blue); break;
+            }
+            g.setFont(new Font(Font.MONOSPACED ,Font.BOLD ,SCALE + 5 ));
+            g.drawString("Player: " + i ,blockSize * i * SCALE + 20 , SCALE * 3);
+            g.drawString("Score: " + snakeList[i].getScores()  ,blockSize * i * SCALE + 20 , SCALE * 5);
+            //  g.fillRect(blockSize * i * SCALE + 10, 10, (blockSize) * SCALE , 90);
+        }
 
         g.setColor(Color.white);
-        g.drawRect(10, 110, width * SCALE - 30, height * SCALE - 120);
+        g.drawRect(SCALE, SCALE * 8, width * SCALE - SCALE * 2 , height * SCALE - SCALE * 9);
 
+        g.setColor(Color.white);
+        g.drawRect((int)food.getPosition().getX(),(int)food.getPosition().getY(),SCALE ,SCALE );
+        g.fillRect((int)food.getPosition().getX(),(int)food.getPosition().getY(),SCALE ,SCALE );
 
-        for(int i = 0 ; i < 4 ; i++)
-            snakeList[i].drawSnake(g);
+        for(int i = 0 ; i <  numberOfSnake ; i++)
+            snakeList[i].drawSnake( g , i);
 
         g.dispose();
     }
@@ -115,18 +135,20 @@ public class Game extends JPanel implements Runnable, ActionListener {
             e.printStackTrace();
         }
 
-//        for (int i = lengthOfSnake - 1; i >= 1; --i)
-//            snakeBody[i].setLocation(snakeBody[i - 1]);
-//        if (key.up)
-//            snakeBody[0].y -= 20;
-//        else if (key.down)
-//            snakeBody[0].y += 20;
-//        else if (key.left)
-//            snakeBody[0].x -= 20;
-//        else if (key.right)
-//            snakeBody[0].x += 20;
+        snakeList[0].updateSnake(key);
 
-        for(int i = 0 ; i < 4 ; i++){
+        if (snakeList[0].isCollidingWith(food)) {
+            snakeList[0].grow();
+            food.setPosition(getRandomPosition());
+        }
+
+        if (snakeList[0].isDead() || snakeList[0].isOutOfBounds(width ,height )) {
+
+            JOptionPane.showMessageDialog(this, "Information", "Do you want to reset this game !", JOptionPane.INFORMATION_MESSAGE);
+            stop();
+        }
+
+        /*for(int i = 1 ; i < 4 ; i++){
 
 
             Random rand = new Random();
@@ -135,7 +157,7 @@ public class Game extends JPanel implements Runnable, ActionListener {
             n = n % 4;
 
 
-            if (n == 0) {
+            if (n == 5) {
                 key.up = true;
                 key.down = false;
                 key.left = false;
@@ -162,10 +184,14 @@ public class Game extends JPanel implements Runnable, ActionListener {
 
             snakeList[i].updateSnake(key);
         }
-
+*/
         repaint();
     }
 
+
+    private Point getRandomPosition() {
+        return new Point(random.nextInt(width  - 2) * SCALE + SCALE , random.nextInt(height - 9) * SCALE + SCALE * 9);
+    }
     public synchronized void start() {
         running = true;
         thread = new Thread(this, "Display");
