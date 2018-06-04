@@ -11,29 +11,16 @@ public class KeyBoard implements KeyListener {
 	public void keyPressed(KeyEvent e) {
 			
 		if ((e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_W) && !down) {
-
-			up = true;
-			down = false;
-			left = false;
-			right = false;
-		}
+			setKeyUp();
+	}
 		else if ((e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_S) && !up) {
-			up = false;
-			down = true;
-			left = false;
-			right = false;
+			setKeyDown();
 		}
 		else if ((e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_A) && !right) {
-			up = false;
-			down = false;
-			left = true;
-			right = false;
+			setKeyLeft();
 		}
 		else if ((e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_D) && !left) {
-			up = false;
-			down = false;
-			left = false;
-			right = true;
+			setKeyRight();
 		}
 	}
 	@Override
@@ -44,5 +31,29 @@ public class KeyBoard implements KeyListener {
 	public void keyTyped(KeyEvent e) {
 	}
 
+	public void setKeyUp(){
+		up = true;
+		down = false;
+		left = false;
+		right = false;
+	}
+	public void setKeyDown(){
+		up = false;
+		down = true;
+		left = false;
+		right = false;
+	}
+	public void setKeyLeft(){
+		up = false;
+		down = false;
+		left = true;
+		right = false;
+	}
+	public void setKeyRight(){
+		up = false;
+		down = false;
+		left = false;
+		right = true;
+	}
 
 }

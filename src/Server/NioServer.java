@@ -1,5 +1,6 @@
 package Server;
 
+import GUI.ClientLogin;
 import GUI.Sever.SeverLog;
 import Support.BlockData;
 import Support.ChangeRequest;
@@ -50,6 +51,15 @@ public class NioServer implements Runnable {
 
     private SeverLog severLog;
 
+    public ClientLogin getGame() {
+        return game;
+    }
+
+    public void setGame(ClientLogin game) {
+        this.game = game;
+    }
+
+    ClientLogin game;
 
     public List<Room> getRooms() {
         return rooms;
@@ -365,6 +375,7 @@ public class NioServer implements Runnable {
 
         Player player = new Player();
         player.setSocketChannel(socketChannel);
+
 
         players.add(player);
         BlockData blockData = new BlockData(TypeBlock.LOGIN, Long.toString(player.getId()));
