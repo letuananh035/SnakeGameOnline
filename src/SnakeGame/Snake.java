@@ -2,6 +2,7 @@ package SnakeGame;
 
 import GUI.Game;
 import SnakeGame.KeyBoard;
+import Support.Model.Player;
 
 import java.awt.*;
 
@@ -13,35 +14,66 @@ public class Snake {
 
     private int scores = 0;
 
+    private Player player;
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public void setPlayer(Player player) {
+        this.player = player;
+    }
+
+    public KeyBoard getKey() {
+        return key;
+    }
+
+    public void setKey(KeyBoard key) {
+        this.key = key;
+    }
+
+    private  KeyBoard key;
+
+
     public Snake(int ID){
 
         int x = 0;
         int y = 0;
 
+        key = new KeyBoard();
+
         if( ID == 0){
 
             x = Game.SCALE * 3;
             y = Game.SCALE * 10;
+
+            key.setKeyRight();
         }
         else if( ID == 1){
             x = Game.SCALE * 3;
-            y = Game.SCALE * 15;
+            y = Game.SCALE * (Game.height - 4);
+
+            key.setKeyRight();
         }
         else if( ID == 2){
-            x = Game.SCALE * 10;
-            y = Game.SCALE * 10;
+            x = Game.SCALE * (Game.width - 4 );
+            y = Game.SCALE * 11;
+
+            key.setKeyLeft();
         }
         else if( ID == 3){
-            x = Game.SCALE * 10;
-            y = Game.SCALE * 15;
+            x = Game.SCALE * (Game.width - 4 );
+            y = Game.SCALE * (Game.height - 5);
+
+            key.setKeyLeft();
         }
 
         for (int i = 0; i < 100; i++)
-            snakeBody[i] = new Point(x,y);
+            snakeBody[i] = new Point( x , y );
 
     }
 
-    public void  updateSnake(KeyBoard key){
+    public void  updateSnake(){
 
         for (int i = lengthOfSnake - 1; i >= 1; --i)
             snakeBody[i].setLocation(snakeBody[i - 1]);
@@ -66,6 +98,11 @@ public class Snake {
             g.fillRect(snakeBody[i].x, snakeBody[i].y, Game.SCALE - 1, Game.SCALE - 1 );
         }
     }
+
+    public int getLengthOfSnake(){
+        return  lengthOfSnake;
+    }
+
 
     private void switchColors(Graphics g , int ID){
 
@@ -102,5 +139,8 @@ public class Snake {
     public void grow() {
         lengthOfSnake++;
         scores++;
+    }
+    public Point[] getSnakeBody(){
+        return snakeBody;
     }
 }

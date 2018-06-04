@@ -56,6 +56,7 @@ public class NioClient implements Runnable {
         return player;
     }
     private List<String> rooms;
+    private List<String> players;
     private RspHandler worker;
 
 
@@ -91,7 +92,8 @@ public class NioClient implements Runnable {
 
     public void parseAllRoom(String str){
         rooms = Arrays.asList(DataUtil.parseRoom(str));
-        game.UpdateList(rooms);
+      //  players = Arrays.asList(DataUtil.parseRo(str));
+        game.UpdateList(rooms );
 //        int length = list.length;
 //        for(int i =0; i < length;++i){
 //            rooms.add(new Room(Long.parseLong(list[i])));

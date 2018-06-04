@@ -1,25 +1,28 @@
 package GUI;
 
 import Client.NioClient;
+import GUI.Sever.SeverLog;
 import SnakeGame.Food;
 import SnakeGame.KeyBoard;
 import SnakeGame.Snake;
+import Support.Model.Player;
 import javafx.geometry.Point2D;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.Random;
 
 import javax.swing.*;
 
-
+import Support.Model.Player;
 public class Game extends JPanel implements Runnable, ActionListener {
 
     private static final long serialVersionUID = 1L;
 
     // screen game
-    private static int width = 60;
-    private static int height = 35;
+    public static int width = 60;
+    public static int height = 35;
     public static int SCALE = 15;
     public static String title = "Snake";
     private boolean running = false;
@@ -29,7 +32,7 @@ public class Game extends JPanel implements Runnable, ActionListener {
     private Snake[] snakeList = new Snake[4];
     private Random random = new Random();
 
-    private int numberOfSnake = 3;
+    private int numberOfSnake = 4;
     // thread
     private int delay = 100;
     private Thread thread;
@@ -38,8 +41,10 @@ public class Game extends JPanel implements Runnable, ActionListener {
     private KeyBoard key;
 
     NioClient client;
+
     //socket;
 
+    GameSever gameSever = new GameSever();
 
     public Game(NioClient client) {
         this.client = client;
@@ -114,9 +119,22 @@ public class Game extends JPanel implements Runnable, ActionListener {
         g.drawRect((int)food.getPosition().getX(),(int)food.getPosition().getY(),SCALE ,SCALE );
         g.fillRect((int)food.getPosition().getX(),(int)food.getPosition().getY(),SCALE ,SCALE );
 
-        for(int i = 0 ; i <  numberOfSnake ; i++)
-            snakeList[i].drawSnake( g , i);
+       // for(int i = 0 ; i <  numberOfSnake ; i++)
+          //  snakeList[i].drawSnake( g , i);
 
+        int[][] data = gameSever.getDataTable();
+
+        for (int i = 0 ; i < data.length;i++){
+            for (int j = 0 ; j < data[i].length;j++){
+                if(data[i][j] != 0) {
+
+                    switchColors( g , data[i][j]);
+
+                    g.drawRect((int) j * SCALE, (int) i * SCALE, SCALE, SCALE);
+                    g.fillRect((int) j * SCALE, (int) i * SCALE, SCALE, SCALE);
+                }
+            }
+        }
         g.dispose();
     }
 
@@ -135,7 +153,8 @@ public class Game extends JPanel implements Runnable, ActionListener {
             e.printStackTrace();
         }
 
-        snakeList[0].updateSnake(key);
+       /* snakeList[0].setKey(key);
+        snakeList[0].updateSnake();
 
         if (snakeList[0].isCollidingWith(food)) {
             snakeList[0].grow();
@@ -148,43 +167,11 @@ public class Game extends JPanel implements Runnable, ActionListener {
             stop();
         }
 
-        /*for(int i = 1 ; i < 4 ; i++){
+        for(int i = 1 ; i < 4 ; i++){
 
+            snakeList[i].updateSnake();
+        }*/
 
-            Random rand = new Random();
-            int  n = rand.nextInt(50) + 1;
-
-            n = n % 4;
-
-
-            if (n == 5) {
-                key.up = true;
-                key.down = false;
-                key.left = false;
-                key.right = false;
-            }
-            else if (n == 1) {
-                key.up = false;
-                key.down = true;
-                key.left = false;
-                key.right = false;
-            }
-            else if (n == 2) {
-                key.up = false;
-                key.down = false;
-                key.left = true;
-                key.right = false;
-            }
-            else if (n == 3) {
-                key.up = false;
-                key. down = false;
-                key. left = false;
-                key. right = true;
-            }
-
-            snakeList[i].updateSnake(key);
-        }
-*/
         repaint();
     }
 
@@ -206,7 +193,15 @@ public class Game extends JPanel implements Runnable, ActionListener {
             e.printStackTrace();
         }
     }
+    private void switchColors(Graphics g , int ID){
 
+        switch (ID){
+            case 1: g.setColor(Color.green); break;
+            case 2: g.setColor(Color.red); break;
+            case 3: g.setColor(Color.orange); break;
+            case 4: g.setColor(Color.blue); break;
+        }
+    }
     @Override
     public void actionPerformed(ActionEvent e) {
         // TODO Auto-generated method stub
