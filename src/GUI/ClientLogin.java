@@ -3,6 +3,7 @@ package GUI;
 import Client.NioClient;
 import Client.RspHandler;
 import Support.BlockData;
+import Support.Model.Room;
 import Support.TypeBlock;
 import Support.Utils.DataUtil;
 
@@ -65,21 +66,6 @@ public class ClientLogin{
 
         }
 
-        clientUsingList.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent evt) {
-                JList list = (JList)evt.getSource();
-                if (evt.getClickCount() == 2) {
-
-                    // Double-click detected
-                    int index = list.locationToIndex(evt.getPoint());
-                    RoomPassword roomPassword = new RoomPassword();
-                    roomPassword.createAndShowGUI();
-
-                }
-            }
-        });
-
-
         btnHost.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -90,10 +76,10 @@ public class ClientLogin{
             }
         });
 
-        clientUsingList.addMouseListener(new MouseAdapter() {
+        RoomList.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent evt) {
                 JList list = (JList)evt.getSource();
-                if (evt.getClickCount() == 2) {
+                if (evt.getClickCount() >= 2) {
                     int index = list.locationToIndex(evt.getPoint());
                     String id = list.getSelectedValue().toString();
                     joinRoom = Long.parseLong(id);
@@ -119,9 +105,9 @@ public class ClientLogin{
 
             @Override
             public void windowClosed(WindowEvent e) {
-                super.windowClosed(e);
                 threadRsp.stop();
                 threadClient.stop();
+                super.windowClosed(e);
             }
         });
 
@@ -135,13 +121,16 @@ public class ClientLogin{
             roomLobby.updateList(listPlayer);
         }
         else{
+            if(joinRoom != -1){
+                Room room = new Room(joinRoom);
+                ClientLogin.client.getPlayer().setRoom(room);
+            }
             Lobby lobby = new Lobby();
             lobby.createAndShowGUI();
             frame.hide();
         }
 
     }
-
 
     public void show(){
         frame.show();
@@ -152,12 +141,8 @@ public class ClientLogin{
         rooms.forEach(item -> {
             ((DefaultListModel) RoomList.getModel()).addElement(item);
         });
-
-
     }
     public void UpdateListPlayer(List<String> players) {
-
-
         clientUsingList.setModel(new DefaultListModel<String>());
         players.forEach(item -> {
             ((DefaultListModel) clientUsingList.getModel()).addElement(item);

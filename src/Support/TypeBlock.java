@@ -10,8 +10,8 @@ public enum TypeBlock {
     OUTROOM("OUTROOM", 5),
     ALLROOM("ALLROOM",6),
     JOINROOM("JOINROOM",7),
-    UPDATEROOM("UPDATEROOM",8);
-
+    UPDATEROOM("UPDATEROOM",8),
+    ALLPLAYER("ALLPLAYER",9);
     private String stringValue;
     private int intValue;
 

@@ -5,8 +5,10 @@ import Support.TypeBlock;
 import Support.Utils.DataUtil;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -61,6 +63,9 @@ public class RspHandler implements Runnable {
 						}
 					}else if(blockData.getType() == TypeBlock.UPDATEROOM){
 						client.getGame().UpdateLobby(blockData.getMsg());
+					}else if(blockData.getType() == TypeBlock.ALLPLAYER){
+						String[] listPlayer = DataUtil.parseRoom(blockData.getMsg());
+						client.getGame().UpdateListPlayer(Arrays.asList(listPlayer));
 					}
 				}
 			}

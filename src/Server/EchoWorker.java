@@ -51,8 +51,7 @@ public class EchoWorker implements Runnable {
 				}else if(blockData.getType() == TypeBlock.LOGIN){
 					dataEvent.server.send(dataEvent.socket, dataEvent.data);
 					dataEvent.server.sendRoomtToPlayer(dataEvent.socket);
-				}else if(blockData.getType() == TypeBlock.DISCONNECT){
-					System.out.println(blockData.getMsg());
+					dataEvent.server.sendPlayerAll();
 				}else if(blockData.getType() == TypeBlock.OUTROOM){
 					long id = Long.parseLong(blockData.getMsg());
 					List<Room> list = dataEvent.server.getRooms();
@@ -66,8 +65,10 @@ public class EchoWorker implements Runnable {
 									dataEvent.server.sendCreateRoomAll();
 								}else{
 									list.get(j).setPlayerHost(list.get(j).getListPlayer().get(0));
-									dataEvent.server.sendCreateRoomAll();
+									dataEvent.server.sendUpdateRoom(Long.toString(list.get(j).getId()));
 								}
+							}else{
+								dataEvent.server.sendUpdateRoom(Long.toString(list.get(j).getId()));
 							}
 							break;
 						}
@@ -81,6 +82,11 @@ public class EchoWorker implements Runnable {
 					dataEvent.server.send(dataEvent.socket,blockData1.toBytes());
 					dataEvent.server.sendUpdateRoom(room);
 					//System.out.println(blockData.getMsg());
+				}
+				else if(blockData.getType() == TypeBlock.DISCONNECT){
+					dataEvent.server.getSeverLog().UpdateList("Player " + blockData.getMsg() + " disconnect!");
+					dataEvent.server.removePlayer(blockData.getMsg());
+					dataEvent.server.sendPlayerAll();
 				}
 			}
 

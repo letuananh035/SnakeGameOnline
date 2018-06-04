@@ -112,12 +112,44 @@ public class NioServer implements Runnable {
         this.selector.wakeup();
     }
 
+    public void sendPlayerAll(){
+
+        synchronized (this.pendingChanges) {
+            players.forEach(player -> {
+                // Indicate we want the interest ops set changed
+                this.pendingChanges.add(new ChangeRequest(player.getSocketChannel(), ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
+
+
+                String listPlayer = "";
+                for(int i = 0; i < players.size();++i){
+                    listPlayer += Long.toString(players.get(i).getId()) + "~";
+                }
+                if(players.size() > 0) listPlayer = listPlayer.substring(0,listPlayer.length() - 1);
+
+                BlockData data = new BlockData(TypeBlock.ALLPLAYER,listPlayer);
+
+                // And queue the data we want written
+                synchronized (this.pendingData) {
+                    List queue = (List) this.pendingData.get(player.getSocketChannel());
+                    if (queue == null) {
+                        queue = new ArrayList();
+                        this.pendingData.put(player.getSocketChannel(), queue);
+                    }
+                    queue.add(ByteBuffer.wrap(data.toBytes()));
+                }
+            });
+        }
+        // Finally, wake up our selecting thread so it can make the required changes
+        this.selector.wakeup();
+    }
+
     public String createRoom(String ID,String password){
         Room room = new Room();
         int length = players.size();
         for(int i =0; i < length; ++i){
             if(Long.toString(players.get(i).getId()).equals(ID)){
                 room.setPlayerHost(players.get(i));
+                room.addPlayer(players.get(i));
                 room.setPassWord(password);
                 rooms.add(room);
                 return Long.toString(room.getId());
@@ -130,6 +162,15 @@ public class NioServer implements Runnable {
         for(int i =0; i < rooms.size();++i){
             if(rooms.get(i).getId() == id){
                 rooms.remove(i);
+                break;
+            }
+        }
+    }
+
+    public void removePlayer(String id){
+        for(int i =0; i < players.size();++i){
+            if(players.get(i).getId() == Long.parseLong(id)){
+                players.remove(i);
                 break;
             }
         }
@@ -170,20 +211,21 @@ public class NioServer implements Runnable {
         List<Player> players_ = null;
         for(int i =0; i < rooms.size();++i){
             if(rooms.get(i).getId() == Long.parseLong(id)){
-                players = rooms.get(i).getListPlayer();
+                players_ = rooms.get(i).getListPlayer();
             }
         }
         synchronized (this.pendingChanges) {
+            List<Player> finalPlayers_ = players_;
             players_.forEach(player -> {
                 // Indicate we want the interest ops set changed
                 this.pendingChanges.add(new ChangeRequest(player.getSocketChannel(), ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
 
 
                 String listPlayer = "";
-                for(int i = 0; i < players_.size();++i){
-                    listPlayer += Long.toString(players_.get(i).getId()) + "~";
+                for(int i = 0; i < finalPlayers_.size(); ++i){
+                    listPlayer += Long.toString(finalPlayers_.get(i).getId()) + "~";
                 }
-                if(players_.size() > 0) listPlayer = listPlayer.substring(0,listPlayer.length() - 1);
+                if(finalPlayers_.size() > 0) listPlayer = listPlayer.substring(0,listPlayer.length() - 1);
 
                 BlockData data = new BlockData(TypeBlock.UPDATEROOM,listPlayer);
 

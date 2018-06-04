@@ -26,11 +26,8 @@ public class Lobby {
         this.client = ClientLogin.client;
         this.clientLogin = ClientLogin.mActivity;
         ClientLogin.roomLobby = this;
-
         playerWaitingList.setModel(new DefaultListModel<String>());
-       // rooms.forEach(item -> {
-        ((DefaultListModel) playerWaitingList.getModel()).addElement(client.getPlayer().getId());
-
+        ((DefaultListModel) playerWaitingList.getModel()).addElement("[You] "+ Long.toString(ClientLogin.client.getPlayer().getId()));
 
         btnStartGame.addActionListener(new ActionListener() {
             @Override
@@ -60,16 +57,21 @@ public class Lobby {
     }
 
     public void updateList(String[] list){
-        list1.setModel(new DefaultListModel<String>());
+        ((DefaultListModel) playerWaitingList.getModel()).removeAllElements();
+        playerWaitingList.setModel(new DefaultListModel<String>());
         for(int i =0; i < list.length;++i){
-            ((DefaultListModel) list1.getModel()).addElement(list[i]);
+            if(list[i].equals(Long.toString(ClientLogin.client.getPlayer().getId()))){
+                ((DefaultListModel) playerWaitingList.getModel()).addElement("[You] "+ list[i]);
+            }else{
+                ((DefaultListModel) playerWaitingList.getModel()).addElement(list[i]);
+            }
         }
     }
 
 
     public static void createAndShowGUI() {
-
-        jFrameLobby = new JFrame("RoomPassword");
+        String name = Long.toString(ClientLogin.client.getPlayer().getRoom().getId());
+        jFrameLobby = new JFrame(name);
         jFrameLobby.setContentPane(new Lobby().lobbyPanel);
         //jFrameLobby.setSize(new Dimension(200,200));
         jFrameLobby.setBounds(300,300,200,300);

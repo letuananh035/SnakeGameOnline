@@ -22,7 +22,6 @@ public class Room extends BaseObject {
 
     public void setPlayerHost(Player playerHost) {
         this.playerHost = playerHost;
-        listPlayer.add(playerHost);
     }
 
     public List<Player> getListPlayer() {

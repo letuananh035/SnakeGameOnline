@@ -35,8 +35,8 @@ public class RoomPassword extends JPanel {
                     } catch (IOException e1) {
                         e1.printStackTrace();
                     }
-                    Lobby lobby = new Lobby();
-                    lobby.createAndShowGUI();
+                    //Lobby lobby = new Lobby();
+                    //lobby.createAndShowGUI();
                     framePassword.dispose();
                 }else{
                     BlockData blockData = new BlockData(TypeBlock.JOINROOM,Long.toString(ClientLogin.client.getPlayer().getId()) + "~" + Long.toString(ClientLogin.joinRoom) + "~" + text);
