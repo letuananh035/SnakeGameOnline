@@ -5,10 +5,10 @@ public enum TypeBlock {
     ERROR("ERROR", 0),
     LOGIN("LOGIN", 1),
     START("START", 2),
-    TURN("TURN", 3),
-    EMOTI("EMOTI", 4),
+    DISCONNECT("DISCONNECT", 3),
+    CREATEROOM("CREATEROOM", 4),
     NAME("NAME", 5),
-    MSG("MSG",6);
+    ALLROOM("ALLROOM",6);
 
     private String stringValue;
     private int intValue;

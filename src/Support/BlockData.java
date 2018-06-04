@@ -48,7 +48,7 @@ public class BlockData {
 
     @Override
     public String toString(){
-        return type.toString() + ";" + msg;
+        return type.toString() + ";" + msg + "]";
     }
 
 

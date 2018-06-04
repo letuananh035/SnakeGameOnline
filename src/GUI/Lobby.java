@@ -17,11 +17,10 @@ public class Lobby {
     private static JFrame jFrameLobby;
 
     private  NioClient client;
-
-    public Lobby(NioClient client) {
-
-        this.client = client;
-
+    private ClientLogin clientLogin;
+    public Lobby() {
+        this.client = ClientLogin.client;
+        this.clientLogin = ClientLogin.mActivity;
         btnStartGame.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -31,20 +30,27 @@ public class Lobby {
                 jFrameGame = new JFrame("ClientLogin");
                 jFrameGame.setBounds(300, 300, 400, 400);
                 jFrameGame.setContentPane(game);
-                jFrameGame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                jFrameGame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
                 jFrameGame.pack();
                 jFrameGame.setVisible(true);
+                jFrameGame.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent windowEvent) {
+                        clientLogin.show();
+                        jFrameGame.dispose();
+                    }
 
+                });
                 jFrameLobby.dispose();
             }
         });
     }
 
 
-    public static void createAndShowGUI(NioClient client) {
+    public static void createAndShowGUI() {
 
         jFrameLobby = new JFrame("RoomPassword");
-        jFrameLobby.setContentPane(new Lobby(client).lobbyPanel);
+        jFrameLobby.setContentPane(new Lobby().lobbyPanel);
         //jFrameLobby.setSize(new Dimension(200,200));
         jFrameLobby.setBounds(300,300,200,300);
         jFrameLobby.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

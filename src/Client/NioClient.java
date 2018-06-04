@@ -1,8 +1,12 @@
 package Client;
 
+import GUI.ClientLogin;
 import Support.BlockData;
 import Support.ChangeRequest;
+import Support.Model.Player;
+import Support.Model.Room;
 import Support.TypeBlock;
+import Support.Utils.DataUtil;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -35,9 +39,25 @@ public class NioClient implements Runnable {
     // Maps a SocketChannel to a RspHandler
     //private Map rspHandlers = Collections.synchronizedMap(new HashMap());
     // SocketChannel Sever
-    SocketChannel socket = null;
+    private SocketChannel socket = null;
 
+    public ClientLogin getGame() {
+        return game;
+    }
+
+    public void setGame(ClientLogin game) {
+        this.game = game;
+    }
+
+    ClientLogin game;
+
+    private Player player;
+    public Player getPlayer() {
+        return player;
+    }
+    private List<String> rooms;
     private RspHandler worker;
+
 
     public NioClient(InetAddress hostAddress, int port, RspHandler worker) throws IOException {
         this.hostAddress = hostAddress;
@@ -59,6 +79,24 @@ public class NioClient implements Runnable {
         }
         // Finally, wake up our selecting thread so it can make the required changes
         this.selector.wakeup();
+    }
+
+    public void setPlayerID(String id){
+        player = new Player(Long.parseLong(id));
+    }
+
+    public void setPlayerRoom(String id){
+        player.setRoom(Long.parseLong(id));
+    }
+
+    public void parseAllRoom(String str){
+        rooms = Arrays.asList(DataUtil.parseRoom(str));
+        game.UpdateList(rooms);
+//        int length = list.length;
+//        for(int i =0; i < length;++i){
+//            rooms.add(new Room(Long.parseLong(list[i])));
+//        }
+
     }
 
     public void run() {
@@ -210,7 +248,6 @@ public class NioClient implements Runnable {
             key.cancel();
             return;
         }
-
         // Register an interest in writing on this channel
         key.interestOps(SelectionKey.OP_WRITE);
     }
@@ -248,11 +285,6 @@ public class NioClient implements Runnable {
             t.start();
             //client.SetUpSocket();
             new Thread(handler).start();
-            int i = 0;
-            BlockData blockData = new BlockData(TypeBlock.MSG, Integer.toString(i));
-            client.send(blockData.toBytes());
-            Thread.sleep(10000);
-            client.send(blockData.toBytes());
             while(true){
 
             }
