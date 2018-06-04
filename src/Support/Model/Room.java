@@ -1,9 +1,10 @@
 package Support.Model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Room extends BaseObject {
-    private List<Player> listPlayer;
+    private List<Player> listPlayer = new ArrayList<Player>();
     private String passWord;
     private Player playerHost;
 
@@ -21,6 +22,33 @@ public class Room extends BaseObject {
 
     public void setPlayerHost(Player playerHost) {
         this.playerHost = playerHost;
+        listPlayer.add(playerHost);
+    }
+
+    public List<Player> getListPlayer() {
+        return listPlayer;
+    }
+
+    public void addPlayer(Player p){
+        listPlayer.add(p);
+    }
+
+    public void remove(long id){
+        for(int i =0; i < listPlayer.size();++i){
+            if(listPlayer.get(i).getId() == id){
+                listPlayer.remove(i);
+                break;
+            }
+        }
+    }
+
+    public boolean checkExist(long id){
+        for(int i =0; i < listPlayer.size();++i){
+            if(listPlayer.get(i).getId() == id){
+                return true;
+            }
+        }
+        return false;
     }
 
     public Room() {

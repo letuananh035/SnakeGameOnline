@@ -6,7 +6,7 @@ import java.nio.channels.SocketChannel;
 
 public class Player extends BaseObject{
     SocketChannel socketChannel;
-    private long room;
+    private Room room;
 
     public SocketChannel getSocketChannel() {
         return socketChannel;
@@ -16,11 +16,11 @@ public class Player extends BaseObject{
         this.socketChannel = socketChannel;
     }
 
-    public long getRoom() {
+    public Room getRoom() {
         return room;
     }
 
-    public void setRoom(long room) {
+    public void setRoom(Room room) {
         this.room = room;
     }
 

@@ -6,6 +6,7 @@ import Support.ChangeRequest;
 import Support.Model.Player;
 import Support.Model.Room;
 import Support.TypeBlock;
+import jdk.nashorn.internal.ir.Block;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -49,6 +50,10 @@ public class NioServer implements Runnable {
 
     private SeverLog severLog;
 
+
+    public List<Room> getRooms() {
+        return rooms;
+    }
 
     public SeverLog getSeverLog() {
         return severLog;
@@ -121,6 +126,82 @@ public class NioServer implements Runnable {
         return "";
     }
 
+    public void removeRoom(long id){
+        for(int i =0; i < rooms.size();++i){
+            if(rooms.get(i).getId() == id){
+                rooms.remove(i);
+                break;
+            }
+        }
+    }
+
+    public int joinRoom(String id,String room,String pass){
+        long idLong = Long.parseLong(id);
+        long roomLong = Long.parseLong(room);
+        int error = -1;
+        for(int i =0; i < rooms.size();++i){
+            if(rooms.get(i).getId() == roomLong ){
+                if(rooms.get(i).getPassWord().equals(pass)){
+                    Player p = getPlayerFromID(idLong);
+                    if(p != null){
+                        rooms.get(i).addPlayer(p);
+                        error = 0;
+                    }
+                }
+                else{
+                    error = -2;
+                }
+            }
+        }
+        return error;
+    }
+
+
+    public Player getPlayerFromID(long id){
+        for(int i =0; i < players.size();++i){
+            if(players.get(i).getId() == id){
+                return players.get(i);
+            }
+        }
+        return null;
+    }
+
+    public void sendUpdateRoom(String id) {
+        List<Player> players_ = null;
+        for(int i =0; i < rooms.size();++i){
+            if(rooms.get(i).getId() == Long.parseLong(id)){
+                players = rooms.get(i).getListPlayer();
+            }
+        }
+        synchronized (this.pendingChanges) {
+            players_.forEach(player -> {
+                // Indicate we want the interest ops set changed
+                this.pendingChanges.add(new ChangeRequest(player.getSocketChannel(), ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
+
+
+                String listPlayer = "";
+                for(int i = 0; i < players_.size();++i){
+                    listPlayer += Long.toString(players_.get(i).getId()) + "~";
+                }
+                if(players_.size() > 0) listPlayer = listPlayer.substring(0,listPlayer.length() - 1);
+
+                BlockData data = new BlockData(TypeBlock.UPDATEROOM,listPlayer);
+
+                // And queue the data we want written
+                synchronized (this.pendingData) {
+                    List queue = (List) this.pendingData.get(player.getSocketChannel());
+                    if (queue == null) {
+                        queue = new ArrayList();
+                        this.pendingData.put(player.getSocketChannel(), queue);
+                    }
+                    queue.add(ByteBuffer.wrap(data.toBytes()));
+                }
+            });
+        }
+        // Finally, wake up our selecting thread so it can make the required changes
+        this.selector.wakeup();
+    }
+
     public void sendCreateRoomAll() {
         synchronized (this.pendingChanges) {
             players.forEach(player -> {
@@ -132,7 +213,8 @@ public class NioServer implements Runnable {
                 for(int i = 0; i < rooms.size();++i){
                     listRoom += Long.toString(rooms.get(i).getId()) + "~";
                 }
-                listRoom = listRoom.substring(0,listRoom.length() - 1);
+                if(rooms.size() > 0) listRoom = listRoom.substring(0,listRoom.length() - 1);
+
                 BlockData data = new BlockData(TypeBlock.ALLROOM,listRoom);
 
                 // And queue the data we want written
@@ -243,9 +325,8 @@ public class NioServer implements Runnable {
         player.setSocketChannel(socketChannel);
 
         players.add(player);
-
         BlockData blockData = new BlockData(TypeBlock.LOGIN, Long.toString(player.getId()));
-        System.out.println("Player " + Long.toString(player.getId()) + " login!");
+        getSeverLog().UpdateList("Player " + Long.toString(player.getId()) + " login!");
         this.worker.processData(this, player.getSocketChannel(), blockData.toBytes(), blockData.toBytes().length);
     }
 

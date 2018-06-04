@@ -7,8 +7,10 @@ public enum TypeBlock {
     START("START", 2),
     DISCONNECT("DISCONNECT", 3),
     CREATEROOM("CREATEROOM", 4),
-    NAME("NAME", 5),
-    ALLROOM("ALLROOM",6);
+    OUTROOM("OUTROOM", 5),
+    ALLROOM("ALLROOM",6),
+    JOINROOM("JOINROOM",7),
+    UPDATEROOM("UPDATEROOM",8);
 
     private String stringValue;
     private int intValue;

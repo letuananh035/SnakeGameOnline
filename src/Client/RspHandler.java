@@ -43,13 +43,24 @@ public class RspHandler implements Runnable {
 					BlockData blockData = new BlockData(msg);
 					if(blockData.getType() == TypeBlock.CREATEROOM){
 						System.out.println("Room create: " + blockData.getMsg());
-						client.setPlayerRoom(blockData.getMsg());
+						client.setPlayerCreateRoom(blockData.getMsg());
 					}else if(blockData.getType() == TypeBlock.ALLROOM){
 						System.out.println("All Room: " + blockData.getMsg());
 						client.parseAllRoom(blockData.getMsg());
 					}else if(blockData.getType() == TypeBlock.LOGIN){
 						System.out.println("Player ID: " + blockData.getMsg());
 						client.setPlayerID(blockData.getMsg());
+					}else if(blockData.getType() == TypeBlock.JOINROOM){
+						int error = Integer.parseInt(blockData.getMsg());
+						if(error == 0){
+							client.getGame().UpdateLobby();
+						}else if(error == -1){
+							System.out.println("Room không tồn tại!");
+						}else if(error == -2){
+							System.out.println("Mật khẩu không đúng!");
+						}
+					}else if(blockData.getType() == TypeBlock.UPDATEROOM){
+						client.getGame().UpdateLobby(blockData.getMsg());
 					}
 				}
 			}

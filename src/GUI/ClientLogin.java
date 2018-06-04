@@ -5,13 +5,11 @@ import Client.RspHandler;
 import Support.BlockData;
 import Support.Model.Room;
 import Support.TypeBlock;
+import Support.Utils.DataUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
@@ -33,6 +31,8 @@ public class ClientLogin{
     public static Thread threadClient;
     public static Thread threadRsp;
     public static ClientLogin mActivity;
+    public static long joinRoom;
+    public static Lobby roomLobby;
     // JFrame frame;
     public ClientLogin() {
 
@@ -67,9 +67,24 @@ public class ClientLogin{
         btnHost.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                joinRoom = -1;
                 RoomPassword roomPassword = new RoomPassword();
                 roomPassword.createAndShowGUI();
                 frame.hide();
+            }
+        });
+
+        clientUsingList.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                JList list = (JList)evt.getSource();
+                if (evt.getClickCount() == 2) {
+                    int index = list.locationToIndex(evt.getPoint());
+                    String id = list.getSelectedValue().toString();
+                    joinRoom = Long.parseLong(id);
+                    RoomPassword roomPassword = new RoomPassword();
+                    roomPassword.createAndShowGUI();
+                    // Double-click detected
+                }
             }
         });
 
@@ -102,6 +117,20 @@ public class ClientLogin{
         });
 
     }
+
+    public void UpdateLobby(String list){
+        String[] listPlayer = DataUtil.parseRoom(list);
+        if(roomLobby != null){
+            roomLobby.updateList(listPlayer);
+        }
+        else{
+            Lobby lobby = new Lobby();
+            lobby.createAndShowGUI();
+            frame.hide();
+        }
+
+    }
+
 
     public void show(){
         frame.show();
