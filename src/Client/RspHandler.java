@@ -53,7 +53,7 @@ public class RspHandler implements Runnable {
 					}else if(blockData.getType() == TypeBlock.JOINROOM){
 						int error = Integer.parseInt(blockData.getMsg());
 						if(error == 0){
-							client.getGame().UpdateLobby();
+							client.getGame().UpdateLobby("");
 						}else if(error == -1){
 							System.out.println("Room không tồn tại!");
 						}else if(error == -2){
