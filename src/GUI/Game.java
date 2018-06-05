@@ -211,6 +211,23 @@ public class Game extends JPanel implements Runnable, ActionListener {
         repaint();
     }
 
+    private void setWinAndLose(Graphics g, String str){
+
+
+        g.setColor(Color.white);
+        g.setFont(new Font(Font.MONOSPACED, Font.BOLD, SCALE *5));
+        g.drawString(str, (int) (width / 2) * SCALE - SCALE * 5 , SCALE * 16);
+
+
+        g.drawRect(width / 4 * SCALE, SCALE * 12 , width/2 * SCALE, height*3/4 * SCALE);
+       // g.fillRect(width / 4 * SCALE, SCALE * 12, SCALE, SCALE);
+
+        for(int i = 0 ; i < numberOfSnake ; i++){
+            switchColors(g,i + 1);
+            g.setFont(new Font(Font.MONOSPACED ,Font.BOLD ,SCALE * 2 ));
+            g.drawString("Score: " + snakeList[i].getScores()  ,(width / 3) * SCALE , SCALE * (20 + i*3 ));
+        }
+    }
 
     public void updateListPlayer(){
         snakeList = new Snake[ClientLogin.client.getPlayer().getRoom().getListPlayer().size()];
