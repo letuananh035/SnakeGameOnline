@@ -112,8 +112,12 @@ public class ClientLogin{
             }
         });
 
+    }
 
-
+    public void UpdateScore(String data){
+        String[] list = data.split("~");
+        if(roomGame != null)
+            roomGame.UpdateScore(list);
     }
 
     public void StartGame(){

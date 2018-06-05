@@ -106,6 +106,13 @@ public class Game extends JPanel implements Runnable, ActionListener {
         repaint();
     }
 
+    public void UpdateScore(String [] list){
+            for(int i =0; i < list.length;++i){
+                snakeList[i].upScore(Integer.parseInt(list[i]));
+            }
+            repaint();
+    }
+
     public void paintComponent(Graphics g) {
 
         super.paintComponent(g);

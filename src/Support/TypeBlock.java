@@ -12,7 +12,8 @@ public enum TypeBlock {
     JOINROOM("JOINROOM",7),
     UPDATEROOM("UPDATEROOM",8),
     ALLPLAYER("ALLPLAYER",9),
-    UPDATEGAME("UPDATEGAME",10);
+    UPDATEGAME("UPDATEGAME",10),
+    UPDATESCORE("UPDATESCORE",11);
     private String stringValue;
     private int intValue;
 

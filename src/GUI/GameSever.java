@@ -146,6 +146,11 @@ public class GameSever implements Runnable {
                 dataTable[(int) food.getPosition().getY()][(int) food.getPosition().getX()] = 0;
                 food.setPosition(getRandomPosition());
                 dataTable[(int) food.getPosition().getY()][(int) food.getPosition().getX()] = 5;
+                String dataList = "";
+                for(int j =0; j < snakeList.length;++j){
+                    dataList += Integer.toString(snakeList[i].getScores()) + "~";
+                }
+                NioServer.mainSever.sendScoreToRooom(Long.toString(snakeList[0].getPlayer().getRoom().getId()), dataList);
             }
 
         }

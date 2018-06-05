@@ -70,7 +70,10 @@ public class RspHandler implements Runnable {
 						client.getGame().UpdateGame(blockData.getMsg());
 					}else if(blockData.getType() == TypeBlock.START){
 						client.getGame().StartGame();
+					}else if(blockData.getType() == TypeBlock.UPDATESCORE){
+						client.getGame().UpdateScore(blockData.getMsg());
 					}
+
 				}
 			}
 		}

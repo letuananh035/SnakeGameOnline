@@ -98,6 +98,10 @@ public class Snake {
         }
     }
 
+    public void upScore(int score){
+        scores = score;
+    }
+
     public void drawSnake(Graphics g , int id){
 
         for (int i = 0; i < lengthOfSnake; ++i) {
