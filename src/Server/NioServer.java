@@ -166,11 +166,13 @@ public class NioServer implements Runnable {
 
     public void runGame(String id){
         for(int i = 0; i < rooms.size();++i){
-            if(rooms.get(i).getId() == Long.parseLong(id)){
-                sendGamePlayRooom(rooms.get(i).getListPlayer());
-                rooms.get(i).handle = new GameSever(rooms.get(i).getListPlayer());
-                rooms.get(i).handle.Start();
-                break;
+            if(rooms.get(i).getId() == Long.parseLong(id)) {
+                if (rooms.get(i).getListPlayer().size() >= 2) {
+                    sendGamePlayRooom(rooms.get(i).getListPlayer());
+                    rooms.get(i).handle = new GameSever(rooms.get(i).getListPlayer());
+                    rooms.get(i).handle.Start();
+                    break;
+                }
             }
         }
     }
@@ -303,16 +305,21 @@ public class NioServer implements Runnable {
         for(int i =0; i < rooms.size();++i){
             if(rooms.get(i).getId() == roomLong ){
                 if(rooms.get(i).getPassWord().equals(pass)){
-                    Player p = getPlayerFromID(idLong);
-                    if(p != null){
-                        p.setRoom(rooms.get(i));
-                        rooms.get(i).addPlayer(p);
-                        error = 0;
+                    if(rooms.get(i).getListPlayer().size() < 4 && rooms.get(i).handle == null){
+                        Player p = getPlayerFromID(idLong);
+                        if(p != null){
+                            p.setRoom(rooms.get(i));
+                            rooms.get(i).addPlayer(p);
+                            error = 0;
+                        }
+                    } else{
+                      error = -3;
                     }
                 }
                 else{
                     error = -2;
                 }
+                break;
             }
         }
         return error;

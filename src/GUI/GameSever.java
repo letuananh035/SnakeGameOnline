@@ -9,8 +9,8 @@ import Support.Model.Player;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
 
 
 public class GameSever implements Runnable {
@@ -41,6 +41,7 @@ public class GameSever implements Runnable {
     private KeyBoard key;
     //socket;
 
+    private HashMap<Long,Integer> queue = new HashMap<Long,Integer>();
 
     public GameSever(List<Player> playerList) {
 
@@ -125,9 +126,18 @@ public class GameSever implements Runnable {
             e.printStackTrace();
         }
         dataTable[(int) food.getPosition().getY()][(int) food.getPosition().getX()] = 5;
+
+        synchronized (queue){
+            for(Map.Entry<Long, Integer> entry : queue.entrySet()) {
+                Long key = entry.getKey();
+                Integer value = entry.getValue();
+                setKey(key,value);
+            }
+        }
+
         for (int i = 0; i < snakeList.length; ++i) {
             snakeList[i].updateSnake();
-            if (snakeList[i].isDead() || snakeList[i].isOutOfBounds(width, height)) {
+            if (snakeList[i].isDead() || snakeList[i].isOutOfBounds(width, height) && snakeList[i].getDie() == false) {
                 //Send update game
                 //JOptionPane.showMessageDialog(this, "Information", "Do you want to reset this game !", JOptionPane.INFORMATION_MESSAGE);
                 snakeList[i].setDie(true);
@@ -148,7 +158,7 @@ public class GameSever implements Runnable {
                 dataTable[(int) food.getPosition().getY()][(int) food.getPosition().getX()] = 5;
                 String dataList = "";
                 for(int j =0; j < snakeList.length;++j){
-                    dataList += Integer.toString(snakeList[i].getScores()) + "~";
+                    dataList += Integer.toString(snakeList[j].getScores()) + "~";
                 }
                 NioServer.mainSever.sendScoreToRooom(Long.toString(snakeList[0].getPlayer().getRoom().getId()), dataList);
             }
@@ -176,19 +186,25 @@ public class GameSever implements Runnable {
         }
     }
 
-    public synchronized void updateKey(long id, int key){
+    public void updateKey(long id, int key){
+        synchronized (queue){
+            queue.put(id,key);
+        }
+    }
+
+    private void setKey(long id, int key){
         for(int i =0; i < snakeList.length;++i){
             if(snakeList[i].getPlayer().getId() == id && snakeList[i].getDie() == false ){
-                if ((key == KeyEvent.VK_UP || key == KeyEvent.VK_W) && !snakeList[i].getKey().down) {
+                if ((key == KeyEvent.VK_UP || key == KeyEvent.VK_W) && !snakeList[i].getKey().down && !snakeList[i].getKey().up) {
                     snakeList[i].getKey().setKeyUp();
                 }
-                else if ((key == KeyEvent.VK_DOWN || key == KeyEvent.VK_S) && !snakeList[i].getKey().up) {
+                else if ((key == KeyEvent.VK_DOWN || key == KeyEvent.VK_S) && !snakeList[i].getKey().up && !snakeList[i].getKey().down) {
                     snakeList[i].getKey().setKeyDown();
                 }
-                else if ((key == KeyEvent.VK_LEFT || key == KeyEvent.VK_A) && !snakeList[i].getKey().right) {
+                else if ((key == KeyEvent.VK_LEFT || key == KeyEvent.VK_A) && !snakeList[i].getKey().right && !snakeList[i].getKey().left) {
                     snakeList[i].getKey().setKeyLeft();
                 }
-                else if ((key == KeyEvent.VK_RIGHT ||key == KeyEvent.VK_D) && !snakeList[i].getKey().left) {
+                else if ((key == KeyEvent.VK_RIGHT ||key == KeyEvent.VK_D) && !snakeList[i].getKey().left && !snakeList[i].getKey().right) {
                     snakeList[i].getKey().setKeyRight();
                 }
             }

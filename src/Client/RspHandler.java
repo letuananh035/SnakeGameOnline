@@ -61,6 +61,9 @@ public class RspHandler implements Runnable {
 						}else if(error == -2){
 							System.out.println("Mật khẩu không đúng!");
 						}
+						else if(error == -3){
+							System.out.println("Room đẫ đầy hoặc đang chơi!");
+						}
 					}else if(blockData.getType() == TypeBlock.UPDATEROOM){
 						client.getGame().UpdateLobby(blockData.getMsg());
 					}else if(blockData.getType() == TypeBlock.ALLPLAYER){

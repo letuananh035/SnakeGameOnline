@@ -35,7 +35,7 @@ public class Snake {
         this.player = player;
     }
 
-    public KeyBoard getKey() {
+    public synchronized KeyBoard getKey() {
         return key;
     }
 
@@ -82,19 +82,20 @@ public class Snake {
 
     }
 
-    public void  updateSnake(){
+    public synchronized void updateSnake(){
         if(!isDie) {
             for (int i = lengthOfSnake - 1; i >= 1; --i)
                 snakeBody[i].setLocation(snakeBody[i - 1]);
-
-            if (key.up)
-                snakeBody[0].y -= 1;
-            else if (key.down)
-                snakeBody[0].y += 1;
-            else if (key.left)
-                snakeBody[0].x -= 1;
-            else if (key.right)
-                snakeBody[0].x += 1;
+            synchronized (key) {
+                if (key.up)
+                    snakeBody[0].y -= 1;
+                else if (key.down)
+                    snakeBody[0].y += 1;
+                else if (key.left)
+                    snakeBody[0].x -= 1;
+                else if (key.right)
+                    snakeBody[0].x += 1;
+            }
         }
     }
 
@@ -139,9 +140,9 @@ public class Snake {
     public boolean isCollidingWith(Food food) {
         return snakeBody[0].equals(food.getPosition());
     }
-    public boolean isDead() {
+    public synchronized boolean isDead() {
         for(int i = 1 ; i < lengthOfSnake ; i++)
-            if(snakeBody[0].equals(snakeBody[i]))
+            if(snakeBody[0].x == snakeBody[i].x && snakeBody[0].y == snakeBody[i].y)
                 return true;
 
         return  false;
@@ -150,11 +151,11 @@ public class Snake {
     public int getScores(){
         return scores;
     }
-    public void grow() {
+    public synchronized void grow() {
         lengthOfSnake++;
         scores++;
     }
-    public Point[] getSnakeBody(){
+    public synchronized Point[] getSnakeBody(){
         return snakeBody;
     }
 }

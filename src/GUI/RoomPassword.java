@@ -4,7 +4,6 @@ import Client.NioClient;
 import Support.BlockData;
 import Support.TypeBlock;
 
-import javax.crypto.Cipher;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
