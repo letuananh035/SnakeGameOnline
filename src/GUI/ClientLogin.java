@@ -35,6 +35,7 @@ public class ClientLogin{
     public static ClientLogin mActivity;
     public static long joinRoom;
     public static Lobby roomLobby;
+    public static Game roomGame;
     // JFrame frame;
     public ClientLogin() {
 
@@ -111,8 +112,21 @@ public class ClientLogin{
             }
         });
 
+    }
 
+    public void UpdateScore(String data){
+        String[] list = data.split("~");
+        if(roomGame != null)
+            roomGame.UpdateScore(list);
+    }
 
+    public void StartGame(){
+        roomLobby.StartGame();
+    }
+
+    public void UpdateGame(String data){
+        if(roomGame != null)
+            roomGame.redraw(data);
     }
 
     public void UpdateLobby(String list){

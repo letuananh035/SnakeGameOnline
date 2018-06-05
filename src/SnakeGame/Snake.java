@@ -16,6 +16,17 @@ public class Snake {
 
     private Player player;
 
+    private boolean isDie = false;
+
+    public boolean getDie() {
+        return isDie;
+    }
+
+    public void setDie(boolean die) {
+        isDie = die;
+    }
+
+
     public Player getPlayer() {
         return player;
     }
@@ -44,28 +55,26 @@ public class Snake {
 
         if( ID == 0){
 
-            x = Game.SCALE * 3;
-            y = Game.SCALE * 10;
+            x = 3;
+            y = 5;
 
             key.setKeyRight();
         }
         else if( ID == 1){
-            x = Game.SCALE * 3;
-            y = Game.SCALE * (Game.height - 4);
+            x = 3;
+            y = 7;
 
             key.setKeyRight();
         }
         else if( ID == 2){
-            x = Game.SCALE * (Game.width - 4 );
-            y = Game.SCALE * 11;
-
-            key.setKeyLeft();
+            x = 3;
+            y = 9;
+            key.setKeyRight();
         }
         else if( ID == 3){
-            x = Game.SCALE * (Game.width - 4 );
-            y = Game.SCALE * (Game.height - 5);
-
-            key.setKeyLeft();
+            x = 3;
+            y = 11;
+            key.setKeyRight();
         }
 
         for (int i = 0; i < 100; i++)
@@ -74,18 +83,23 @@ public class Snake {
     }
 
     public void  updateSnake(){
+        if(!isDie) {
+            for (int i = lengthOfSnake - 1; i >= 1; --i)
+                snakeBody[i].setLocation(snakeBody[i - 1]);
 
-        for (int i = lengthOfSnake - 1; i >= 1; --i)
-            snakeBody[i].setLocation(snakeBody[i - 1]);
+            if (key.up)
+                snakeBody[0].y -= 1;
+            else if (key.down)
+                snakeBody[0].y += 1;
+            else if (key.left)
+                snakeBody[0].x -= 1;
+            else if (key.right)
+                snakeBody[0].x += 1;
+        }
+    }
 
-        if (key.up)
-            snakeBody[0].y -= Game.SCALE;
-        else if (key.down)
-            snakeBody[0].y += Game.SCALE;
-        else if (key.left)
-            snakeBody[0].x -= Game.SCALE;
-        else if (key.right)
-            snakeBody[0].x += Game.SCALE;
+    public void upScore(int score){
+        scores = score;
     }
 
     public void drawSnake(Graphics g , int id){
@@ -117,8 +131,8 @@ public class Snake {
     public boolean isOutOfBounds(int width , int height) {
         Point head = snakeBody[0];
 
-        return head.getX() < Game.SCALE || head.getY() < Game.SCALE  * 8
-                || head.getX() > ( width - 2 ) * Game.SCALE  || head.getY() > (height  - 2 )* Game.SCALE ;
+        return head.getX() < 0 || head.getY() < 0
+                || head.getX() >= Game.width  || head.getY() >= Game.height;
     }
 
 
