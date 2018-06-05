@@ -32,28 +32,49 @@ public class Lobby {
         btnStartGame.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
-                Game game = new Game(client);
-
-                jFrameGame = new JFrame("ClientLogin");
-                jFrameGame.setBounds(300, 300, 400, 400);
-                jFrameGame.setContentPane(game);
-                jFrameGame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-                jFrameGame.pack();
-                jFrameGame.setVisible(true);
-                jFrameGame.addWindowListener(new WindowAdapter() {
-                    @Override
-                    public void windowClosing(WindowEvent windowEvent) {
-                        clientLogin.show();
-                        jFrameGame.dispose();
+                if(((DefaultListModel) playerWaitingList.getModel()).get(0).toString().indexOf("[You]") >= 0){
+                    BlockData blockData = new BlockData(TypeBlock.START,Long.toString(ClientLogin.client.getPlayer().getRoom().getId()));
+                    try {
+                        ClientLogin.client.send(blockData.toBytes());
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
                     }
+                }
 
-                });
-                jFrameLobby.dispose();
+
+
             }
         });
 
 
+    }
+
+    public void StartGame(){
+        Game game = new Game(client);
+        jFrameGame = new JFrame("ClientLogin");
+        jFrameGame.setBounds(300, 300, 400, 400);
+        jFrameGame.setContentPane(game);
+        jFrameGame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        jFrameGame.pack();
+        jFrameGame.setVisible(true);
+        jFrameGame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent windowEvent) {
+                ClientLogin.roomLobby = null;
+                ClientLogin.roomGame = null;
+                BlockData blockData = new BlockData(TypeBlock.OUTROOM,Long.toString(ClientLogin.client.getPlayer().getId()));
+                ClientLogin.client.getPlayer().setRoom(null);
+                try {
+                    ClientLogin.client.send(blockData.toBytes());
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                clientLogin.show();
+                jFrameGame.dispose();
+            }
+
+        });
+        jFrameLobby.dispose();
     }
 
     public void updateList(String[] list){

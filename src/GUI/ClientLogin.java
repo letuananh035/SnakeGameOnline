@@ -35,6 +35,7 @@ public class ClientLogin{
     public static ClientLogin mActivity;
     public static long joinRoom;
     public static Lobby roomLobby;
+    public static Game roomGame;
     // JFrame frame;
     public ClientLogin() {
 
@@ -113,6 +114,15 @@ public class ClientLogin{
 
 
 
+    }
+
+    public void StartGame(){
+        roomLobby.StartGame();
+    }
+
+    public void UpdateGame(String data){
+        if(roomGame != null)
+            roomGame.redraw(data);
     }
 
     public void UpdateLobby(String list){

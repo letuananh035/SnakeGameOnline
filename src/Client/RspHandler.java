@@ -66,6 +66,10 @@ public class RspHandler implements Runnable {
 					}else if(blockData.getType() == TypeBlock.ALLPLAYER){
 						String[] listPlayer = DataUtil.parseRoom(blockData.getMsg());
 						client.getGame().UpdateListPlayer(Arrays.asList(listPlayer));
+					}else if(blockData.getType() == TypeBlock.UPDATEGAME){
+						client.getGame().UpdateGame(blockData.getMsg());
+					}else if(blockData.getType() == TypeBlock.START){
+						client.getGame().StartGame();
 					}
 				}
 			}

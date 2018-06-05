@@ -88,6 +88,14 @@ public class EchoWorker implements Runnable {
 					dataEvent.server.removePlayer(blockData.getMsg());
 					dataEvent.server.sendPlayerAll();
 				}
+				else if(blockData.getType() == TypeBlock.START){
+					dataEvent.server.runGame(blockData.getMsg());
+				}else if(blockData.getType() == TypeBlock.UPDATEGAME){
+					long room = Long.parseLong(DataUtil.parseData(blockData.getMsg(),0));
+					long ID = Long.parseLong(DataUtil.parseData(blockData.getMsg(),1));
+					int key = Integer.parseInt(DataUtil.parseData(blockData.getMsg(),2));
+					dataEvent.server.UpdateGame(room,ID,key);
+				}
 			}
 
 

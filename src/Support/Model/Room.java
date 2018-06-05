@@ -1,5 +1,7 @@
 package Support.Model;
 
+import GUI.GameSever;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,6 +9,8 @@ public class Room extends BaseObject {
     private List<Player> listPlayer = new ArrayList<Player>();
     private String passWord;
     private Player playerHost;
+
+    public GameSever handle;
 
     public void setPassWord(String passWord) {
         this.passWord = passWord;

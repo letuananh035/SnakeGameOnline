@@ -1,23 +1,25 @@
 package GUI;
 
 import GUI.Sever.SeverLog;
+import Server.NioServer;
 import SnakeGame.Food;
 import SnakeGame.KeyBoard;
 import SnakeGame.Snake;
 import Support.Model.Player;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.Random;
 
 
-public class GameSever implements Runnable{
+public class GameSever implements Runnable {
 
     private static final long serialVersionUID = 1L;
 
     // screen game
-    public static int width = 60;
-    public static int height = 35;
+    public static int width = 58;
+    public static int height = 26;
     public static int SCALE = 15;
     public static String title = "Snake";
     private boolean running = false;
@@ -37,13 +39,10 @@ public class GameSever implements Runnable{
 
     // keyboard
     private KeyBoard key;
-
-    SeverLog server;
     //socket;
 
 
-    public GameSever() {
-       // this.server = server;
+    public GameSever(List<Player> playerList) {
 
 //        RspHandler handler = new RspHandler();
 //        BlockData blockData = new BlockData(TypeBlock.START, "Create a new room");
@@ -58,17 +57,16 @@ public class GameSever implements Runnable{
         // create food
 
         food = new Food(getRandomPosition());
-
+        snakeList = new Snake[playerList.size()];
         // generate snake
-        for(int i = 0 ; i < 4 ; i++){
+        for (int i = 0; i < playerList.size(); i++) {
             snakeList[i] = new Snake(i);
-          //  snakeList[i].setPlayer(listPlayer.get(i));
+            snakeList[i].setPlayer(playerList.get(i));
         }
 
-        start();
     }
 
-    public  int[][] getDataTable(){
+    public int[][] getDataTable() {
         return dataTable;
     }
 
@@ -115,73 +113,101 @@ public class GameSever implements Runnable{
     @Override
     public void run() {
         while (running) {
+            clearDataTable();
             update();
         }
-
     }
 
-    public void update() {
+    public  void update() {
         try {
             Thread.sleep(delay);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        clearDataTable();
-
-        for(int i = 0;i < snakeList.length;++i){
-
+        dataTable[(int) food.getPosition().getY()][(int) food.getPosition().getX()] = 5;
+        for (int i = 0; i < snakeList.length; ++i) {
             snakeList[i].updateSnake();
+            if (snakeList[i].isDead() || snakeList[i].isOutOfBounds(width, height)) {
+                //Send update game
+                //JOptionPane.showMessageDialog(this, "Information", "Do you want to reset this game !", JOptionPane.INFORMATION_MESSAGE);
+                snakeList[i].setDie(true);
+                //NioServer.mainSever.sendDie(snakeList[i].getPlayer().getId());
+                //stop();
+            }
 
-
-            for(int iBody = 0 ; iBody < snakeList[i].getLengthOfSnake(); iBody++)
-                dataTable[(int )snakeList[i].getSnakeBody()[iBody].y / Game.SCALE][(int )snakeList[i].getSnakeBody()[iBody].x/ Game.SCALE] = i + 1;
-
+            if (snakeList[i].getDie() != true) {
+                for (int iBody = 0; iBody < snakeList[i].getLengthOfSnake(); iBody++) {
+                    dataTable[snakeList[i].getSnakeBody()[iBody].y][snakeList[i].getSnakeBody()[iBody].x] = i + 1;
+                }
+            }
 
             if (snakeList[i].isCollidingWith(food)) {
                 snakeList[i].grow();
+                dataTable[(int) food.getPosition().getY()][(int) food.getPosition().getX()] = 0;
                 food.setPosition(getRandomPosition());
-
-                dataTable[(int )food.getPosition().getY()/ Game.SCALE][(int )food.getPosition().getX()/ Game.SCALE] = -1;
-                //Send update game
+                dataTable[(int) food.getPosition().getY()][(int) food.getPosition().getX()] = 5;
             }
 
-            if (snakeList[i].isDead() || snakeList[i].isOutOfBounds(width ,height )) {
-                //Send update game
-                //JOptionPane.showMessageDialog(this, "Information", "Do you want to reset this game !", JOptionPane.INFORMATION_MESSAGE);
-                //stop();
-            }
         }
 
         //Save game;
-
+        String dataList = "";
+        int num = 0;
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                dataList += Integer.toString(dataTable[i][j]);
+            }
+        }
+        NioServer.mainSever.sendGameToRooom(Long.toString(snakeList[0].getPlayer().getRoom().getId()), dataList);
         //repaint();
     }
 
-    private void clearDataTable(){
-        for (int i = 0 ; i < height ; i++){
-            for (int j = 0 ; j < width ;j++){
+    private void clearDataTable() {
+        dataTable = new int[height][width];
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
                 dataTable[i][j] = 0;
             }
         }
     }
 
-    private Point getRandomPosition() {
-        return new Point(random.nextInt(width  - 2) * SCALE + SCALE , random.nextInt(height - 9) * SCALE + SCALE * 9);
+    public synchronized void updateKey(long id, int key){
+        for(int i =0; i < snakeList.length;++i){
+            if(snakeList[i].getPlayer().getId() == id && snakeList[i].getDie() == false ){
+                if ((key == KeyEvent.VK_UP || key == KeyEvent.VK_W) && !snakeList[i].getKey().down) {
+                    snakeList[i].getKey().setKeyUp();
+                }
+                else if ((key == KeyEvent.VK_DOWN || key == KeyEvent.VK_S) && !snakeList[i].getKey().up) {
+                    snakeList[i].getKey().setKeyDown();
+                }
+                else if ((key == KeyEvent.VK_LEFT || key == KeyEvent.VK_A) && !snakeList[i].getKey().right) {
+                    snakeList[i].getKey().setKeyLeft();
+                }
+                else if ((key == KeyEvent.VK_RIGHT ||key == KeyEvent.VK_D) && !snakeList[i].getKey().left) {
+                    snakeList[i].getKey().setKeyRight();
+                }
+            }
+        }
     }
-    public synchronized void start() {
+
+    private Point getRandomPosition() {
+        return new Point(random.nextInt(width - 1), random.nextInt(height - 1));
+    }
+
+    public synchronized void Start() {
         running = true;
         thread = new Thread(this, "Display");
         thread.start();
     }
 
-    public synchronized void stop() {
+    public synchronized void Stop() {
         running = false;
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            System.out.println("StopThread");
+//            thread.join();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
     }
 
 }

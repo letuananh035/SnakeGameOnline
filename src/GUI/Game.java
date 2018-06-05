@@ -21,8 +21,8 @@ public class Game extends JPanel implements Runnable, ActionListener {
     private static final long serialVersionUID = 1L;
 
     // screen game
-    public static int width = 60;
-    public static int height = 35;
+    public static int width = 58;
+    public static int height = 26;
     public static int SCALE = 15;
     public static String title = "Snake";
     private boolean running = false;
@@ -41,13 +41,14 @@ public class Game extends JPanel implements Runnable, ActionListener {
     private KeyBoard key;
 
     NioClient client;
-
+    int[][] data = new int[height][width];
     //socket;
 
-    GameSever gameSever = new GameSever();
+
 
     public Game(NioClient client) {
         this.client = client;
+        ClientLogin.roomGame = this;
 
 //        RspHandler handler = new RspHandler();
 //        BlockData blockData = new BlockData(TypeBlock.START, "Create a new room");
@@ -66,7 +67,7 @@ public class Game extends JPanel implements Runnable, ActionListener {
         key = new KeyBoard();
         addKeyListener(key);
         setFocusable(true);
-        key.right = true;
+        //key.right = true;
 
 
         // create food
@@ -77,13 +78,33 @@ public class Game extends JPanel implements Runnable, ActionListener {
         for(int i = 0 ; i < 4 ; i++)
             snakeList[i] = new Snake(i);
 
+        for (int i = 0 ; i < height;i++){
+            for (int j = 0 ; j < width;j++){
+                data[i][j] = 0;
+            }
+        }
 
-        Dimension size = new Dimension(width * SCALE, height * SCALE);
+        Dimension size = new Dimension((width + 2) * SCALE, (height + 9) * SCALE);
         setPreferredSize(size);
-        start();
+        //start();
     }
 
 
+    public void redraw(String list){
+
+        String[] listItem = list.split("");
+        try{
+            for (int i = 0 ; i < height;i++){
+                for (int j = 0 ; j < width;j++){
+                    data[i][j] = Integer.parseInt(listItem[j + i * width]);
+                }
+            }
+        }catch (Exception e){
+            System.out.println(listItem.length);
+        }
+
+        repaint();
+    }
 
     public void paintComponent(Graphics g) {
 
@@ -109,30 +130,24 @@ public class Game extends JPanel implements Runnable, ActionListener {
             g.setFont(new Font(Font.MONOSPACED ,Font.BOLD ,SCALE + 5 ));
             g.drawString("Player: " + i ,blockSize * i * SCALE + 20 , SCALE * 3);
             g.drawString("Score: " + snakeList[i].getScores()  ,blockSize * i * SCALE + 20 , SCALE * 5);
-            //  g.fillRect(blockSize * i * SCALE + 10, 10, (blockSize) * SCALE , 90);
+            //g.fillRect(blockSize * i * SCALE + 10, 10, (blockSize) * SCALE , 90);
         }
 
         g.setColor(Color.white);
         g.drawRect(SCALE, SCALE * 8, width * SCALE - SCALE * 2 , height * SCALE - SCALE * 9);
-
-        g.setColor(Color.white);
-        g.drawRect((int)food.getPosition().getX(),(int)food.getPosition().getY(),SCALE ,SCALE );
-        g.fillRect((int)food.getPosition().getX(),(int)food.getPosition().getY(),SCALE ,SCALE );
+//
+//        g.setColor(Color.white);
+//        g.drawRect((int)food.getPosition().getX(),(int)food.getPosition().getY(),SCALE ,SCALE );
+//        g.fillRect((int)food.getPosition().getX(),(int)food.getPosition().getY(),SCALE ,SCALE );
 
        // for(int i = 0 ; i <  numberOfSnake ; i++)
           //  snakeList[i].drawSnake( g , i);
 
-        int[][] data = gameSever.getDataTable();
-
-        for (int i = 0 ; i < data.length;i++){
-            for (int j = 0 ; j < data[i].length;j++){
-                if(data[i][j] != 0) {
-
-                    switchColors( g , data[i][j]);
-
-                    g.drawRect((int) j * SCALE, (int) i * SCALE, SCALE, SCALE);
-                    g.fillRect((int) j * SCALE, (int) i * SCALE, SCALE, SCALE);
-                }
+        for (int i = 0 ; i < height;i++){
+            for (int j = 0 ; j < width;j++){
+                switchColors( g , data[i][j]);
+                g.drawRect(SCALE + (int) j * SCALE, SCALE * 8 + (int) i * SCALE, SCALE, SCALE);
+                g.fillRect(SCALE + (int) j * SCALE, SCALE * 8 + (int) i * SCALE, SCALE, SCALE);
             }
         }
         g.dispose();
@@ -200,6 +215,8 @@ public class Game extends JPanel implements Runnable, ActionListener {
             case 2: g.setColor(Color.red); break;
             case 3: g.setColor(Color.orange); break;
             case 4: g.setColor(Color.blue); break;
+            case 5: g.setColor(Color.white); break;
+            case 0: g.setColor(Color.black); break;
         }
     }
     @Override
