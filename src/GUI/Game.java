@@ -34,7 +34,7 @@ public class Game extends JPanel implements Runnable, ActionListener {
 
     private int numberOfSnake = 4;
     // thread
-    private int delay = 100;
+    private int delay = 10000;
     private Thread thread;
 
     // keyboard
@@ -44,10 +44,11 @@ public class Game extends JPanel implements Runnable, ActionListener {
     int[][] data = new int[height][width];
     //socket;
 
-
+    private int READY_COUNT = 10;
 
     public Game(NioClient client) {
         this.client = client;
+
         ClientLogin.roomGame = this;
 
 //        RspHandler handler = new RspHandler();
@@ -59,6 +60,7 @@ public class Game extends JPanel implements Runnable, ActionListener {
 //            e1.printStackTrace();
 //        }
 //        handler.waitForResponse();
+
         requestFocus();
         requestFocusInWindow();
         setFocusTraversalKeysEnabled(false);
@@ -128,20 +130,22 @@ public class Game extends JPanel implements Runnable, ActionListener {
         }
 
         for (int i = 0 ; i < numberOfSnake ; i++) {
+
             switch (i){
                 case 0: g.setColor(Color.green); break;
                 case 1: g.setColor(Color.red); break;
                 case 2: g.setColor(Color.orange); break;
                 case 3: g.setColor(Color.blue); break;
             }
+
             g.setFont(new Font(Font.MONOSPACED ,Font.BOLD ,SCALE + 5 ));
             g.drawString("Player: " + i ,blockSize * i * SCALE + 20 , SCALE * 3);
             g.drawString("Score: " + snakeList[i].getScores()  ,blockSize * i * SCALE + 20 , SCALE * 5);
             //g.fillRect(blockSize * i * SCALE + 10, 10, (blockSize) * SCALE , 90);
         }
 
-        g.setColor(Color.white);
-        g.drawRect(SCALE, SCALE * 8, width * SCALE - SCALE * 2 , height * SCALE - SCALE * 9);
+      //  g.setColor(Color.white);
+       // g.drawRect(SCALE, SCALE * 8, width * SCALE - SCALE * 2 , height * SCALE - SCALE * 9);
 //
 //        g.setColor(Color.white);
 //        g.drawRect((int)food.getPosition().getX(),(int)food.getPosition().getY(),SCALE ,SCALE );
@@ -150,13 +154,25 @@ public class Game extends JPanel implements Runnable, ActionListener {
        // for(int i = 0 ; i <  numberOfSnake ; i++)
           //  snakeList[i].drawSnake( g , i);
 
-        for (int i = 0 ; i < height;i++){
-            for (int j = 0 ; j < width;j++){
-                switchColors( g , data[i][j]);
-                g.drawRect(SCALE + (int) j * SCALE, SCALE * 8 + (int) i * SCALE, SCALE, SCALE);
-                g.fillRect(SCALE + (int) j * SCALE, SCALE * 8 + (int) i * SCALE, SCALE, SCALE);
+
+
+
+        if(READY_COUNT > 0) {
+
+            setReadyCount( g , READY_COUNT);
+            READY_COUNT--;
+        }
+        else
+        {
+            for (int i = 0 ; i < height;i++){
+                for (int j = 0 ; j < width;j++){
+                    switchColors( g , data[i][j]);
+                    g.drawRect(SCALE + (int) j * SCALE, SCALE * 8 + (int) i * SCALE, SCALE, SCALE);
+                    g.fillRect(SCALE + (int) j * SCALE, SCALE * 8 + (int) i * SCALE, SCALE, SCALE);
+                }
             }
         }
+
         g.dispose();
     }
 
@@ -197,6 +213,12 @@ public class Game extends JPanel implements Runnable, ActionListener {
         repaint();
     }
 
+
+    private void setReadyCount(Graphics g, int ready){
+        g.setColor(Color.white);
+        g.setFont(new Font(Font.MONOSPACED, Font.BOLD, SCALE *5));
+        g.drawString(ready + "", (int) (width / 2) * SCALE - SCALE * 2, SCALE * 16);
+    }
 
     private Point getRandomPosition() {
         return new Point(random.nextInt(width  - 2) * SCALE + SCALE , random.nextInt(height - 9) * SCALE + SCALE * 9);
