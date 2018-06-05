@@ -86,8 +86,11 @@ public class NioClient implements Runnable {
         player = new Player(Long.parseLong(id));
     }
 
-    public void setPlayerRoom(String id){
-        player.setRoom(Long.parseLong(id));
+    public void setPlayerCreateRoom(String id){
+        Room room = new Room(Long.parseLong(id));
+        room.setPlayerHost(player);
+        player.setRoom(room);
+        getGame().UpdateLobby("");
     }
 
     public void parseAllRoom(String str){

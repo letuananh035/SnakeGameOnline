@@ -4,6 +4,7 @@ import Client.NioClient;
 import Support.BlockData;
 import Support.TypeBlock;
 
+import javax.crypto.Cipher;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -22,26 +23,36 @@ public class RoomPassword extends JPanel {
     public RoomPassword() {
         client = ClientLogin.client;
         clientLogin = ClientLogin.mActivity;
-        btnEnterPassword.addActionListener(new ActionListener() {
 
+        btnEnterPassword.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
-                String text = "123213";
-
-                BlockData blockData = new BlockData(TypeBlock.CREATEROOM, Long.toString(client.getPlayer().getId()) + "~" + text);
-                try {
-                    client.send(blockData.toBytes());
-                } catch (IOException e1) {
-                    e1.printStackTrace();
+                String text = txtPasswordField.getText();
+                if(ClientLogin.joinRoom == -1){
+                    BlockData blockData = new BlockData(TypeBlock.CREATEROOM, Long.toString(client.getPlayer().getId()) + "~" + text);
+                    try {
+                        ClientLogin.client.send(blockData.toBytes());
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                    //Lobby lobby = new Lobby();
+                    //lobby.createAndShowGUI();
+                    framePassword.dispose();
+                }else{
+                    BlockData blockData = new BlockData(TypeBlock.JOINROOM,Long.toString(ClientLogin.client.getPlayer().getId()) + "~" + Long.toString(ClientLogin.joinRoom) + "~" + text);
+                    try {
+                        ClientLogin.client.send(blockData.toBytes());
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                    ClientLogin.mActivity.show();
+                    framePassword.dispose();
                 }
-
-                Lobby lobby = new Lobby();
-                lobby.createAndShowGUI();
-
-                framePassword.dispose();
         }
         });
+
+
+
     }
 
     public static void createAndShowGUI() {
@@ -49,10 +60,20 @@ public class RoomPassword extends JPanel {
         framePassword = new JFrame("RoomPassword");
         framePassword.setContentPane(new RoomPassword().PasswordPanel);
         framePassword.setBounds(300,300,200,200);
-        framePassword.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        framePassword.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         framePassword.pack();
         framePassword.setVisible(true);
+        framePassword.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                ClientLogin.mActivity.show();
+                framePassword.dispose();
+            }
 
+            @Override
+            public void windowClosed(WindowEvent e) {
+                super.windowClosed(e);
+            }
+        });
     }
 
     public JPanel getPanel(){
