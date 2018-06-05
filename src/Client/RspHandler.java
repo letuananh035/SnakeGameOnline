@@ -1,5 +1,6 @@
 package Client;
 
+import GUI.ClientLogin;
 import Support.BlockData;
 import Support.TypeBlock;
 import Support.Utils.DataUtil;
@@ -65,7 +66,12 @@ public class RspHandler implements Runnable {
 							System.out.println("Room đẫ đầy hoặc đang chơi!");
 						}
 					}else if(blockData.getType() == TypeBlock.UPDATEROOM){
-						client.getGame().UpdateLobby(blockData.getMsg());
+						if(ClientLogin.roomGame == null){
+							client.getGame().UpdateLobby(blockData.getMsg());
+						}else{
+							client.getGame().UpdateListPlayerInGame(blockData.getMsg());
+						}
+
 					}else if(blockData.getType() == TypeBlock.ALLPLAYER){
 						String[] listPlayer = DataUtil.parseRoom(blockData.getMsg());
 						client.getGame().UpdateListPlayer(Arrays.asList(listPlayer));
@@ -75,6 +81,8 @@ public class RspHandler implements Runnable {
 						client.getGame().StartGame();
 					}else if(blockData.getType() == TypeBlock.UPDATESCORE){
 						client.getGame().UpdateScore(blockData.getMsg());
+					}else if(blockData.getType() == TypeBlock.UPDATECOUNT){
+						client.getGame().UpdateCount(blockData.getMsg());
 					}
 
 				}

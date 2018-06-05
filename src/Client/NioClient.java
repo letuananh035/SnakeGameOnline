@@ -250,6 +250,8 @@ public class NioClient implements Runnable {
         } catch (IOException e) {
             // Cancel the channel's registration with our selector
             System.out.println(e);
+            if( this.getGame() != null)
+                this.getGame().Disconnect();
             key.cancel();
             return;
         }

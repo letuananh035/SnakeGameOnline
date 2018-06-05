@@ -43,9 +43,8 @@ public class Game extends JPanel implements Runnable, ActionListener {
     NioClient client;
     int[][] data = new int[height][width];
     //socket;
-
     private int READY_COUNT = 10;
-
+    private boolean isStart = true;
     public Game(NioClient client) {
         this.client = client;
 
@@ -75,10 +74,14 @@ public class Game extends JPanel implements Runnable, ActionListener {
         // create food
 
         food = new Food(getRandomPosition());
-
+        snakeList = new Snake[ClientLogin.client.getPlayer().getRoom().getListPlayer().size()];
         // generate snake
-        for(int i = 0 ; i < 4 ; i++)
+        for(int i = 0 ; i < snakeList.length; i++){
             snakeList[i] = new Snake(i);
+            snakeList[i].setPlayer(ClientLogin.client.getPlayer().getRoom().getListPlayer().get(i));
+        }
+
+
 
         for (int i = 0 ; i < height;i++){
             for (int j = 0 ; j < width;j++){
@@ -93,7 +96,6 @@ public class Game extends JPanel implements Runnable, ActionListener {
 
 
     public void redraw(String list){
-
         String[] listItem = list.split("");
         try{
             for (int i = 0 ; i < height;i++){
@@ -104,7 +106,6 @@ public class Game extends JPanel implements Runnable, ActionListener {
         }catch (Exception e){
             System.out.println(listItem.length);
         }
-
         repaint();
     }
 
@@ -129,7 +130,7 @@ public class Game extends JPanel implements Runnable, ActionListener {
             g.drawRect(blockSize * i * SCALE + SCALE, 10, (blockSize - 2 ) * SCALE , SCALE * 6);
         }
 
-        for (int i = 0 ; i < numberOfSnake ; i++) {
+        for (int i = 0 ; i < snakeList.length ; i++) {
 
             switch (i){
                 case 0: g.setColor(Color.green); break;
@@ -139,7 +140,11 @@ public class Game extends JPanel implements Runnable, ActionListener {
             }
 
             g.setFont(new Font(Font.MONOSPACED ,Font.BOLD ,SCALE + 5 ));
-            g.drawString("Player: " + i ,blockSize * i * SCALE + 20 , SCALE * 3);
+            if(snakeList[i].getPlayer().getId() == ClientLogin.client.getPlayer().getId()){
+                g.drawString("Player: You" ,blockSize * i * SCALE + 20 , SCALE * 3);
+            }else{
+                g.drawString("Player: " + i ,blockSize * i * SCALE + 20 , SCALE * 3);
+            }
             g.drawString("Score: " + snakeList[i].getScores()  ,blockSize * i * SCALE + 20 , SCALE * 5);
             //g.fillRect(blockSize * i * SCALE + 10, 10, (blockSize) * SCALE , 90);
         }
@@ -154,23 +159,16 @@ public class Game extends JPanel implements Runnable, ActionListener {
        // for(int i = 0 ; i <  numberOfSnake ; i++)
           //  snakeList[i].drawSnake( g , i);
 
-
-
+        for (int i = 0 ; i < height;i++){
+            for (int j = 0 ; j < width;j++){
+                switchColors( g , data[i][j]);
+                g.drawRect(SCALE + (int) j * SCALE, SCALE * 8 + (int) i * SCALE, SCALE, SCALE);
+                g.fillRect(SCALE + (int) j * SCALE, SCALE * 8 + (int) i * SCALE, SCALE, SCALE);
+            }
+        }
 
         if(READY_COUNT > 0) {
-
             setReadyCount( g , READY_COUNT);
-            READY_COUNT--;
-        }
-        else
-        {
-            for (int i = 0 ; i < height;i++){
-                for (int j = 0 ; j < width;j++){
-                    switchColors( g , data[i][j]);
-                    g.drawRect(SCALE + (int) j * SCALE, SCALE * 8 + (int) i * SCALE, SCALE, SCALE);
-                    g.fillRect(SCALE + (int) j * SCALE, SCALE * 8 + (int) i * SCALE, SCALE, SCALE);
-                }
-            }
         }
 
         g.dispose();
@@ -213,6 +211,23 @@ public class Game extends JPanel implements Runnable, ActionListener {
         repaint();
     }
 
+
+    public void updateListPlayer(){
+        snakeList = new Snake[ClientLogin.client.getPlayer().getRoom().getListPlayer().size()];
+        // generate snake
+        for(int i = 0 ; i < snakeList.length; i++){
+            snakeList[i] = new Snake(i);
+            snakeList[i].setPlayer(ClientLogin.client.getPlayer().getRoom().getListPlayer().get(i));
+        }
+    }
+
+    public boolean checkWaitingRestart(){
+        return isStart;
+    }
+
+    public void updateCount(int count){
+        READY_COUNT = count;
+    }
 
     private void setReadyCount(Graphics g, int ready){
         g.setColor(Color.white);

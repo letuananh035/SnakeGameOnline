@@ -2,6 +2,8 @@ package GUI;
 
 import Client.NioClient;
 import Support.BlockData;
+import Support.Model.Player;
+import Support.Model.Room;
 import Support.TypeBlock;
 
 import javax.swing.*;
@@ -80,12 +82,14 @@ public class Lobby {
     public void updateList(String[] list){
         ((DefaultListModel) playerWaitingList.getModel()).removeAllElements();
         playerWaitingList.setModel(new DefaultListModel<String>());
+        ClientLogin.client.getPlayer().getRoom().removeAll();
         for(int i =0; i < list.length;++i){
             if(list[i].equals(Long.toString(ClientLogin.client.getPlayer().getId()))){
                 ((DefaultListModel) playerWaitingList.getModel()).addElement("[You] "+ list[i]);
             }else{
                 ((DefaultListModel) playerWaitingList.getModel()).addElement(list[i]);
             }
+            ClientLogin.client.getPlayer().getRoom().addPlayer(new Player(Long.parseLong(list[i])));
         }
     }
 

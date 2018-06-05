@@ -117,9 +117,9 @@ public class Snake {
 
         for(int i = 0 ; i < snake.getLengthOfSnake() ; i++){
             if(head.equals(snake.getSnakeBody()[i]))
-                return false;
+                return true;
         }
-       return true;
+       return false;
     }
 
 

@@ -45,6 +45,10 @@ public class Room extends BaseObject {
         }
     }
 
+    public void removeAll(){
+        listPlayer = new ArrayList<Player>();
+    }
+
     public boolean checkExist(long id){
         for(int i =0; i < listPlayer.size();++i){
             if(listPlayer.get(i).getId() == id){

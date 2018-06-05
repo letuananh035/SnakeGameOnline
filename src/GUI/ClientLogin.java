@@ -3,6 +3,7 @@ package GUI;
 import Client.NioClient;
 import Client.RspHandler;
 import Support.BlockData;
+import Support.Model.Player;
 import Support.Model.Room;
 import Support.TypeBlock;
 import Support.Utils.DataUtil;
@@ -113,6 +114,16 @@ public class ClientLogin{
 
     }
 
+    public void Disconnect(){
+        RoomList.setModel(new DefaultListModel<String>());
+        ((DefaultListModel) RoomList.getModel()).addElement("Không có kết nối với máy chủ");
+    }
+
+    public void UpdateCount(String data){
+        if(roomGame != null)
+            roomGame.updateCount(Integer.parseInt(data));
+    }
+
     public void UpdateScore(String data){
         String[] list = data.split("~");
         if(roomGame != null)
@@ -126,6 +137,18 @@ public class ClientLogin{
     public void UpdateGame(String data){
         if(roomGame != null)
             roomGame.redraw(data);
+    }
+
+    public void UpdateListPlayerInGame(String list){
+        String[] listPlayer = DataUtil.parseRoom(list);
+        ClientLogin.client.getPlayer().getRoom().setPlayerHost(new Player(Long.parseLong(listPlayer[0])));
+        ClientLogin.client.getPlayer().getRoom().removeAll();
+        for(int i =0; i < listPlayer.length;++i){
+            ClientLogin.client.getPlayer().getRoom().addPlayer(new Player(Long.parseLong(listPlayer[i])));
+        }
+        if(!ClientLogin.roomGame.checkWaitingRestart()){
+            ClientLogin.roomGame.updateListPlayer();
+        }
     }
 
     public void UpdateLobby(String list){

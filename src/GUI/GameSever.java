@@ -43,6 +43,8 @@ public class GameSever implements Runnable {
 
     private HashMap<Long,Integer> queue = new HashMap<Long,Integer>();
 
+    private int READY_COUNT = 10;
+
     public GameSever(List<Player> playerList) {
 
 //        RspHandler handler = new RspHandler();
@@ -63,52 +65,14 @@ public class GameSever implements Runnable {
         for (int i = 0; i < playerList.size(); i++) {
             snakeList[i] = new Snake(i);
             snakeList[i].setPlayer(playerList.get(i));
+            snakeList[i].updateSnake();
+            snakeList[i].updateSnake();
         }
 
     }
 
     public int[][] getDataTable() {
         return dataTable;
-    }
-
-    public void paintComponent(Graphics g) {
-//
-//        super.paintComponent(g);
-//
-//        g.setColor(Color.darkGray);
-//        g.fillRect(0, 0, getWidth(), getHeight());
-//
-//        int blockSize = width / 4;
-//
-//        for (int i = 0 ; i < 4 ; ++i){
-//            g.setColor(Color.white);
-//            g.drawRect(blockSize * i * SCALE + SCALE, 10, (blockSize - 2 ) * SCALE , SCALE * 6);
-//        }
-//
-//        for (int i = 0 ; i < numberOfSnake ; i++) {
-//            switch (i){
-//                case 0: g.setColor(Color.green); break;
-//                case 1: g.setColor(Color.red); break;
-//                case 2: g.setColor(Color.orange); break;
-//                case 3: g.setColor(Color.blue); break;
-//            }
-//            g.setFont(new Font(Font.MONOSPACED ,Font.BOLD ,SCALE + 5 ));
-//            g.drawString("Player: " + i ,blockSize * i * SCALE + 20 , SCALE * 3);
-//            g.drawString("Score: " + snakeList[i].getScores()  ,blockSize * i * SCALE + 20 , SCALE * 5);
-//            //  g.fillRect(blockSize * i * SCALE + 10, 10, (blockSize) * SCALE , 90);
-//        }
-//
-//        g.setColor(Color.white);
-//        g.drawRect(SCALE, SCALE * 8, width * SCALE - SCALE * 2 , height * SCALE - SCALE * 9);
-//
-//        g.setColor(Color.white);
-//        g.drawRect((int)food.getPosition().getX(),(int)food.getPosition().getY(),SCALE ,SCALE );
-//        g.fillRect((int)food.getPosition().getX(),(int)food.getPosition().getY(),SCALE ,SCALE );
-//
-//        for(int i = 0 ; i <  numberOfSnake ; i++)
-//            snakeList[i].drawSnake( g , i);
-//
-//        g.dispose();
     }
 
     @Override
@@ -121,12 +85,18 @@ public class GameSever implements Runnable {
 
     public  void update() {
         try {
-            Thread.sleep(delay);
+            if(READY_COUNT > 0){
+                Thread.sleep(delay * 10);
+                READY_COUNT--;
+                NioServer.mainSever.sendCountToRooom(Long.toString(snakeList[0].getPlayer().getRoom().getId()), READY_COUNT);
+            }else{
+                Thread.sleep(delay);
+            }
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         dataTable[(int) food.getPosition().getY()][(int) food.getPosition().getX()] = 5;
-
         synchronized (queue){
             for(Map.Entry<Long, Integer> entry : queue.entrySet()) {
                 Long key = entry.getKey();
@@ -136,14 +106,27 @@ public class GameSever implements Runnable {
         }
 
         for (int i = 0; i < snakeList.length; ++i) {
-            snakeList[i].updateSnake();
-            if (snakeList[i].isDead() || snakeList[i].isOutOfBounds(width, height) && snakeList[i].getDie() == false) {
-                //Send update game
-                //JOptionPane.showMessageDialog(this, "Information", "Do you want to reset this game !", JOptionPane.INFORMATION_MESSAGE);
-                snakeList[i].setDie(true);
-                //NioServer.mainSever.sendDie(snakeList[i].getPlayer().getId());
-                //stop();
+            if(READY_COUNT <= 0)
+                snakeList[i].updateSnake();
+            if(snakeList[i].getDie() == false){
+                if (snakeList[i].isDead() || snakeList[i].isOutOfBounds(width, height)) {
+                    //Send update game
+                    //JOptionPane.showMessageDialog(this, "Information", "Do you want to reset this game !", JOptionPane.INFORMATION_MESSAGE);
+                    snakeList[i].setDie(true);
+                    //NioServer.mainSever.sendDie(snakeList[i].getPlayer().getId());
+                    //stop();
+                }
+
+                for(int j = 0; j < snakeList.length;++j){
+                    if(j != i && !snakeList[j].getDie() && snakeList[i].dieCollideWithAnotherSnake(snakeList[j])){
+                        snakeList[i].setDie(true);
+                        if(snakeList[j].dieCollideWithAnotherSnake(snakeList[i])){
+                            snakeList[j].setDie(true);
+                        }
+                    }
+                }
             }
+
 
             if (snakeList[i].getDie() != true) {
                 for (int iBody = 0; iBody < snakeList[i].getLengthOfSnake(); iBody++) {
@@ -187,6 +170,7 @@ public class GameSever implements Runnable {
     }
 
     public void updateKey(long id, int key){
+        if(READY_COUNT > 0) return;
         synchronized (queue){
             queue.put(id,key);
         }
@@ -219,6 +203,7 @@ public class GameSever implements Runnable {
         running = true;
         thread = new Thread(this, "Display");
         thread.start();
+        NioServer.mainSever.sendCountToRooom(Long.toString(snakeList[0].getPlayer().getRoom().getId()), READY_COUNT);
     }
 
     public synchronized void Stop() {

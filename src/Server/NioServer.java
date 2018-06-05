@@ -127,6 +127,35 @@ public class NioServer implements Runnable {
     }
 
 
+    public void sendCountToRooom(String id, int data){
+        List<Player> playerList = new ArrayList<Player>();
+        for(int i = 0; i < rooms.size();++i){
+            if(rooms.get(i).getId() == Long.parseLong(id)){
+                playerList = rooms.get(i).getListPlayer();
+            }
+        }
+        synchronized (this.pendingChanges) {
+            playerList.forEach(player -> {
+                // Indicate we want the interest ops set changed
+                this.pendingChanges.add(new ChangeRequest(player.getSocketChannel(), ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
+
+                BlockData blockData = new BlockData(TypeBlock.UPDATECOUNT, Integer.toString(data));
+
+                // And queue the data we want written
+                synchronized (this.pendingData) {
+                    List queue = (List) this.pendingData.get(player.getSocketChannel());
+                    if (queue == null) {
+                        queue = new ArrayList();
+                        this.pendingData.put(player.getSocketChannel(), queue);
+                    }
+                    queue.add(ByteBuffer.wrap(blockData.toBytes()));
+                }
+            });
+        }
+        // Finally, wake up our selecting thread so it can make the required changes
+        this.selector.wakeup();
+    }
+
     public void sendScoreToRooom(String id, String data){
         List<Player> playerList = new ArrayList<Player>();
         for(int i = 0; i < rooms.size();++i){
