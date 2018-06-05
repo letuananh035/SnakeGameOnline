@@ -113,6 +113,17 @@ public class Snake {
         }
     }
 
+    public boolean dieCollideWithAnotherSnake(Snake snake){
+        Point head = snakeBody[0];
+
+        for(int i = 0 ; i < snake.getLengthOfSnake() ; i++){
+            if(head.equals(snake.getSnakeBody()[i]))
+                return false;
+        }
+       return true;
+    }
+
+
     public int getLengthOfSnake(){
         return  lengthOfSnake;
     }
@@ -140,6 +151,7 @@ public class Snake {
         return snakeBody[0].equals(food.getPosition());
     }
     public boolean isDead() {
+
         for(int i = 1 ; i < lengthOfSnake ; i++)
             if(snakeBody[0].equals(snakeBody[i]))
                 return true;
