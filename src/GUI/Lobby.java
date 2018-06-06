@@ -42,13 +42,25 @@ public class Lobby {
                         e1.printStackTrace();
                     }
                 }
-
-
-
             }
         });
 
 
+    }
+
+    public void Show(){
+        playerWaitingList.setModel(new DefaultListModel<String>());
+        for(int i =0; i <  ClientLogin.client.getPlayer().getRoom().getListPlayer().size();++i){
+            String id = Long.toString(ClientLogin.client.getPlayer().getRoom().getListPlayer().get(i).getId());
+            if(id.equals(Long.toString(ClientLogin.client.getPlayer().getId()))){
+                ((DefaultListModel) playerWaitingList.getModel()).addElement("[You] "+ id);
+            }else{
+                ((DefaultListModel) playerWaitingList.getModel()).addElement(id);
+            }
+        }
+        ClientLogin.roomGame = null;
+        jFrameLobby.show();
+        jFrameGame.dispose();
     }
 
     public void StartGame(){
@@ -76,13 +88,13 @@ public class Lobby {
             }
 
         });
-        jFrameLobby.dispose();
+        jFrameLobby.hide();
     }
 
     public void updateList(String[] list){
-        ((DefaultListModel) playerWaitingList.getModel()).removeAllElements();
         playerWaitingList.setModel(new DefaultListModel<String>());
         ClientLogin.client.getPlayer().getRoom().removeAll();
+        ClientLogin.client.getPlayer().getRoom().setPlayerHost(new Player(Long.parseLong(list[0])));
         for(int i =0; i < list.length;++i){
             if(list[i].equals(Long.toString(ClientLogin.client.getPlayer().getId()))){
                 ((DefaultListModel) playerWaitingList.getModel()).addElement("[You] "+ list[i]);

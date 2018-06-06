@@ -95,6 +95,8 @@ public class EchoWorker implements Runnable {
 					long ID = Long.parseLong(DataUtil.parseData(blockData.getMsg(),1));
 					int key = Integer.parseInt(DataUtil.parseData(blockData.getMsg(),2));
 					dataEvent.server.UpdateGame(room,ID,key);
+				}else if(blockData.getType() == TypeBlock.RESTART){
+					dataEvent.server.reStartGame(blockData.getMsg());
 				}
 			}
 

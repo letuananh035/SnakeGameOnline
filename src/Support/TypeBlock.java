@@ -14,7 +14,9 @@ public enum TypeBlock {
     ALLPLAYER("ALLPLAYER",9),
     UPDATEGAME("UPDATEGAME",10),
     UPDATESCORE("UPDATESCORE",11),
-    UPDATECOUNT("UPDATECOUNT",12);
+    UPDATECOUNT("UPDATECOUNT",12),
+    ENDGAME("ENDGAME",13),
+    RESTART("RESTART",14);
     private String stringValue;
     private int intValue;
 

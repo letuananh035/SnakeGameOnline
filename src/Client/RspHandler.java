@@ -2,6 +2,7 @@ package Client;
 
 import GUI.ClientLogin;
 import Support.BlockData;
+import Support.MessageBox;
 import Support.TypeBlock;
 import Support.Utils.DataUtil;
 
@@ -59,11 +60,14 @@ public class RspHandler implements Runnable {
 							client.getGame().UpdateLobby("");
 						}else if(error == -1){
 							System.out.println("Room không tồn tại!");
+							MessageBox.showInfo("Phòng không tồn tại!");
 						}else if(error == -2){
 							System.out.println("Mật khẩu không đúng!");
+							MessageBox.showInfo("Mật khẩu không đúng!");
 						}
 						else if(error == -3){
 							System.out.println("Room đẫ đầy hoặc đang chơi!");
+							MessageBox.showInfo("Phòng đã đầy hoặc đang chơi!");
 						}
 					}else if(blockData.getType() == TypeBlock.UPDATEROOM){
 						if(ClientLogin.roomGame == null){
@@ -83,7 +87,9 @@ public class RspHandler implements Runnable {
 						client.getGame().UpdateScore(blockData.getMsg());
 					}else if(blockData.getType() == TypeBlock.UPDATECOUNT){
 						client.getGame().UpdateCount(blockData.getMsg());
-					}
+					}else if(blockData.getType() == TypeBlock.ENDGAME){
+                        client.getGame().updateEndGame(blockData.getMsg());
+                    }
 
 				}
 			}

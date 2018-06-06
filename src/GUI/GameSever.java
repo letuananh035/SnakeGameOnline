@@ -45,6 +45,8 @@ public class GameSever implements Runnable {
 
     private int READY_COUNT = 10;
 
+    public boolean ENDGAME = false;
+
     public GameSever(List<Player> playerList) {
 
 //        RspHandler handler = new RspHandler();
@@ -96,6 +98,9 @@ public class GameSever implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        if(ENDGAME){
+            return;
+        }
         dataTable[(int) food.getPosition().getY()][(int) food.getPosition().getX()] = 5;
         synchronized (queue){
             for(Map.Entry<Long, Integer> entry : queue.entrySet()) {
@@ -104,7 +109,7 @@ public class GameSever implements Runnable {
                 setKey(key,value);
             }
         }
-
+        int countEnd = 0;
         for (int i = 0; i < snakeList.length; ++i) {
             if(READY_COUNT <= 0)
                 snakeList[i].updateSnake();
@@ -113,6 +118,7 @@ public class GameSever implements Runnable {
                     //Send update game
                     //JOptionPane.showMessageDialog(this, "Information", "Do you want to reset this game !", JOptionPane.INFORMATION_MESSAGE);
                     snakeList[i].setDie(true);
+                    countEnd++;
                     //NioServer.mainSever.sendDie(snakeList[i].getPlayer().getId());
                     //stop();
                 }
@@ -125,6 +131,8 @@ public class GameSever implements Runnable {
                         }
                     }
                 }
+            }else{
+                countEnd++;
             }
 
 
@@ -146,6 +154,20 @@ public class GameSever implements Runnable {
                 NioServer.mainSever.sendScoreToRooom(Long.toString(snakeList[0].getPlayer().getRoom().getId()), dataList);
             }
 
+        }
+
+        if(countEnd >= snakeList.length - 1){
+            String idWin = "";
+            for(int i =0; i < snakeList.length;++i){
+                if(snakeList[i].getDie() == false){
+                    idWin = Long.toString(snakeList[i].getPlayer().getId());
+                }
+            }
+            if(idWin.equals("")){
+                idWin = "-1";
+            }
+            NioServer.mainSever.sendEndGameToRooom(Long.toString(snakeList[0].getPlayer().getRoom().getId()), idWin);
+            ENDGAME = true;
         }
 
         //Save game;

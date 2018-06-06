@@ -53,6 +53,20 @@ public class KeyBoard implements KeyListener {
 				e1.printStackTrace();
 			}
 		}
+		if (e.getKeyCode() == KeyEvent.VK_R && !ClientLogin.roomGame.checkWaitingRestart())  {
+
+			if(ClientLogin.client.getPlayer().getRoom().getListPlayer().size() == 1){
+				ClientLogin.roomLobby.Show();
+			}
+			else if(ClientLogin.client.getPlayer().getId() == ClientLogin.client.getPlayer().getRoom().getPlayerHost().getId()){
+				BlockData blockData = new BlockData(TypeBlock.RESTART,Long.toString(ClientLogin.client.getPlayer().getRoom().getId()));
+				try {
+					ClientLogin.client.send(blockData.toBytes());
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
 	}
 	@Override
 	public void keyReleased(KeyEvent e) {

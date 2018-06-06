@@ -156,6 +156,35 @@ public class NioServer implements Runnable {
         this.selector.wakeup();
     }
 
+    public void sendEndGameToRooom(String id, String data){
+        List<Player> playerList = new ArrayList<Player>();
+        for(int i = 0; i < rooms.size();++i){
+            if(rooms.get(i).getId() == Long.parseLong(id)){
+                playerList = rooms.get(i).getListPlayer();
+            }
+        }
+        synchronized (this.pendingChanges) {
+            playerList.forEach(player -> {
+                // Indicate we want the interest ops set changed
+                this.pendingChanges.add(new ChangeRequest(player.getSocketChannel(), ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
+
+                BlockData blockData = new BlockData(TypeBlock.ENDGAME, data);
+
+                // And queue the data we want written
+                synchronized (this.pendingData) {
+                    List queue = (List) this.pendingData.get(player.getSocketChannel());
+                    if (queue == null) {
+                        queue = new ArrayList();
+                        this.pendingData.put(player.getSocketChannel(), queue);
+                    }
+                    queue.add(ByteBuffer.wrap(blockData.toBytes()));
+                }
+            });
+        }
+        // Finally, wake up our selecting thread so it can make the required changes
+        this.selector.wakeup();
+    }
+
     public void sendScoreToRooom(String id, String data){
         List<Player> playerList = new ArrayList<Player>();
         for(int i = 0; i < rooms.size();++i){
@@ -189,6 +218,18 @@ public class NioServer implements Runnable {
         for(int i =0; i < rooms.size();++i){
             if(rooms.get(i).getId() == idRoom){
                 rooms.get(i).handle.updateKey(idPlayer,key);
+            }
+        }
+    }
+
+    public void reStartGame(String id){
+        for(int i = 0; i < rooms.size();++i){
+            if(rooms.get(i).getId() == Long.parseLong(id)) {
+                sendGamePlayRooom(rooms.get(i).getListPlayer());
+                rooms.get(i).handle.Stop();
+                rooms.get(i).handle = new GameSever(rooms.get(i).getListPlayer());
+                rooms.get(i).handle.Start();
+                break;
             }
         }
     }
@@ -369,36 +410,42 @@ public class NioServer implements Runnable {
         for(int i =0; i < rooms.size();++i){
             if(rooms.get(i).getId() == Long.parseLong(id)){
                 players_ = rooms.get(i).getListPlayer();
+                if(players_.size() == 1 && rooms.get(i).handle != null && rooms.get(i).handle.ENDGAME == true){
+                    rooms.get(i).handle.Stop();
+                    rooms.get(i).handle = null;
+                }
             }
         }
         synchronized (this.pendingChanges) {
             List<Player> finalPlayers_ = players_;
-            players_.forEach(player -> {
-                // Indicate we want the interest ops set changed
-                this.pendingChanges.add(new ChangeRequest(player.getSocketChannel(), ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
+            if (players_ != null) {
+                players_.forEach(player -> {
+                    // Indicate we want the interest ops set changed
+                    this.pendingChanges.add(new ChangeRequest(player.getSocketChannel(), ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
 
 
-                String listPlayer = "";
-                for(int i = 0; i < finalPlayers_.size(); ++i){
-                    listPlayer += Long.toString(finalPlayers_.get(i).getId()) + "~";
-                }
-                if(finalPlayers_.size() > 0) listPlayer = listPlayer.substring(0,listPlayer.length() - 1);
-
-                BlockData data = new BlockData(TypeBlock.UPDATEROOM,listPlayer);
-
-                // And queue the data we want written
-                synchronized (this.pendingData) {
-                    List queue = (List) this.pendingData.get(player.getSocketChannel());
-                    if (queue == null) {
-                        queue = new ArrayList();
-                        this.pendingData.put(player.getSocketChannel(), queue);
+                    String listPlayer = "";
+                    for (int i = 0; i < finalPlayers_.size(); ++i) {
+                        listPlayer += Long.toString(finalPlayers_.get(i).getId()) + "~";
                     }
-                    queue.add(ByteBuffer.wrap(data.toBytes()));
-                }
-            });
+                    if (finalPlayers_.size() > 0) listPlayer = listPlayer.substring(0, listPlayer.length() - 1);
+
+                    BlockData data = new BlockData(TypeBlock.UPDATEROOM, listPlayer);
+
+                    // And queue the data we want written
+                    synchronized (this.pendingData) {
+                        List queue = (List) this.pendingData.get(player.getSocketChannel());
+                        if (queue == null) {
+                            queue = new ArrayList();
+                            this.pendingData.put(player.getSocketChannel(), queue);
+                        }
+                        queue.add(ByteBuffer.wrap(data.toBytes()));
+                    }
+                });
+            }
+            // Finally, wake up our selecting thread so it can make the required changes
+            this.selector.wakeup();
         }
-        // Finally, wake up our selecting thread so it can make the required changes
-        this.selector.wakeup();
     }
 
     public void sendCreateRoomAll() {

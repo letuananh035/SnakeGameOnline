@@ -131,12 +131,23 @@ public class ClientLogin{
     }
 
     public void StartGame(){
-        roomLobby.StartGame();
+        if(roomGame == null){
+            roomLobby.StartGame();
+        }else{
+            roomGame.ReStartGame();
+        }
     }
 
     public void UpdateGame(String data){
         if(roomGame != null)
             roomGame.redraw(data);
+    }
+
+
+    public void updateEndGame(String data){
+        if(roomGame != null){
+            roomGame.updateEndGame(data);
+        }
     }
 
     public void UpdateListPlayerInGame(String list){

@@ -45,6 +45,7 @@ public class Game extends JPanel implements Runnable, ActionListener {
     //socket;
     private int READY_COUNT = 10;
     private boolean isStart = true;
+    private long idWin = 0;
     public Game(NioClient client) {
         this.client = client;
 
@@ -116,6 +117,11 @@ public class Game extends JPanel implements Runnable, ActionListener {
             repaint();
     }
 
+    public void ReStartGame(){
+        isStart = true;
+        READY_COUNT = 10;
+    }
+
     public void paintComponent(Graphics g) {
 
         super.paintComponent(g);
@@ -149,7 +155,7 @@ public class Game extends JPanel implements Runnable, ActionListener {
             //g.fillRect(blockSize * i * SCALE + 10, 10, (blockSize) * SCALE , 90);
         }
 
-      //  g.setColor(Color.white);
+        //g.setColor(Color.white);
        // g.drawRect(SCALE, SCALE * 8, width * SCALE - SCALE * 2 , height * SCALE - SCALE * 9);
 //
 //        g.setColor(Color.white);
@@ -164,6 +170,14 @@ public class Game extends JPanel implements Runnable, ActionListener {
                 switchColors( g , data[i][j]);
                 g.drawRect(SCALE + (int) j * SCALE, SCALE * 8 + (int) i * SCALE, SCALE, SCALE);
                 g.fillRect(SCALE + (int) j * SCALE, SCALE * 8 + (int) i * SCALE, SCALE, SCALE);
+            }
+        }
+
+        if(!isStart){
+            if(ClientLogin.client.getPlayer().getId() == idWin){
+                setWinAndLose(g,"Win");
+            }else{
+                setWinAndLose(g,"Lost");
             }
         }
 
@@ -212,20 +226,36 @@ public class Game extends JPanel implements Runnable, ActionListener {
     }
 
     private void setWinAndLose(Graphics g, String str){
-
+        g.setColor(Color.darkGray);
+        g.fillRect(0, 0, getWidth(), getHeight());
 
         g.setColor(Color.white);
         g.setFont(new Font(Font.MONOSPACED, Font.BOLD, SCALE *5));
         g.drawString(str, (int) (width / 2) * SCALE - SCALE * 5 , SCALE * 16);
 
-
         g.drawRect(width / 4 * SCALE, SCALE * 12 , width/2 * SCALE, height*3/4 * SCALE);
        // g.fillRect(width / 4 * SCALE, SCALE * 12, SCALE, SCALE);
 
-        for(int i = 0 ; i < numberOfSnake ; i++){
-            switchColors(g,i + 1);
-            g.setFont(new Font(Font.MONOSPACED ,Font.BOLD ,SCALE * 2 ));
-            g.drawString("Score: " + snakeList[i].getScores()  ,(width / 3) * SCALE , SCALE * (20 + i*3 ));
+        for(int i = 0 ; i < snakeList.length ; i++){
+            if(snakeList[i].getPlayer().getId() == ClientLogin.client.getPlayer().getId()){
+                switchColors(g,i + 1);
+                g.setFont(new Font(Font.MONOSPACED ,Font.BOLD ,SCALE * 2 ));
+                g.drawString("Score: " + snakeList[i].getScores()  ,(width / 3) * SCALE , SCALE * (20 ));
+            }
+        }
+
+        if(ClientLogin.client.getPlayer().getRoom().getListPlayer().size() == 1){
+            switchColors(g, 5);
+            g.setFont(new Font(Font.MONOSPACED, Font.BOLD, SCALE * 2));
+            g.drawString("Press R return room", (width / 3) * SCALE - 2*SCALE, SCALE * (20 + 3 * 3));
+        } else if(ClientLogin.client.getPlayer().getId() == ClientLogin.client.getPlayer().getRoom().getPlayerHost().getId()) {
+            switchColors(g, 5);
+            g.setFont(new Font(Font.MONOSPACED, Font.BOLD, SCALE * 2));
+            g.drawString("Press R play again!", (width / 3) * SCALE - 2*SCALE, SCALE * (20 + 3 * 3));
+        }else{
+            switchColors(g, 5);
+            g.setFont(new Font(Font.MONOSPACED, Font.BOLD, SCALE * 2));
+            g.drawString("Waitting host!", (width / 3) * SCALE + SCALE, SCALE * (20 + 3 * 3));
         }
     }
 
@@ -236,6 +266,13 @@ public class Game extends JPanel implements Runnable, ActionListener {
             snakeList[i] = new Snake(i);
             snakeList[i].setPlayer(ClientLogin.client.getPlayer().getRoom().getListPlayer().get(i));
         }
+        repaint();
+    }
+
+    public void updateEndGame(String id){
+        idWin = Long.parseLong(id);
+        isStart = false;
+        repaint();
     }
 
     public boolean checkWaitingRestart(){
